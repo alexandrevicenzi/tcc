@@ -58,3 +58,4 @@ target/
 
 venv
 db.sqlite3
+mongodb*
