@@ -20,7 +20,7 @@ This module subscribe to a MQTT Broker and listen for messages from Soressa. If 
 
 ## Soressa
 
-LUA Client Publisher.
+MQTT Client Publisher.
 
 This module runs on ESP8266 and send messagens to a MQTT Broker.
 
