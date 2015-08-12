@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import locator
+import garogh
 
 
 class TestLocator(unittest.TestCase):
 
     def setUp(self):
-        self.loc = locator.Locator(db='test_loc')
+        self.loc = garogh.Locator(db='test_loc')
         self.loc.drop_database()
 
     def tearDown(self):
