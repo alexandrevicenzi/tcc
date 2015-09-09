@@ -4,76 +4,92 @@ MQTT_AUTH_USER = "guest"
 MQTT_AUTH_PWD = "guest"
 MQTT_TIMEOUT = 120
 
-C_TMR = 0
+WIFI_OK_LED = 1 -- pin 1 (GPIO 5)
+WIFI_ERROR_LED = 2 -- pin 2 (GPIO 4)
+
+WIFI_TMR = 0
+MQTT_TMR = 1
+
 
 function wifi_connecting()
-    gpio.write(1, gpio.LOW)
-    gpio.write(2, gpio.LOW)
+    gpio.write(WIFI_OK_LED, gpio.LOW)
+    gpio.write(WIFI_ERROR_LED, gpio.LOW)
 
-    state = false
+    mqtt_client.close()
 
-    tmr.alarm(C_TMR, 120, 1, function()
-        if (state) then
-            gpio.write(1, gpio.HIGH)
+    wifi_state = false
+
+    tmr.alarm(WIFI_TMR, 120, 1, function()
+        if (wifi_state) then
+            gpio.write(WIFI_OK_LED, gpio.HIGH)
         else
-            gpio.write(1, gpio.LOW)
+            gpio.write(WIFI_OK_LED, gpio.LOW)
         end
-        state = not state
+        wifi_state = not wifi_state
     end)
 end
 
 function wifi_connected()
-    tmr.stop(C_TMR)
-    gpio.write(1, gpio.HIGH)
-    gpio.write(2, gpio.LOW)
+    tmr.stop(WIFI_TMR)
+
+    gpio.write(WIFI_OK_LED, gpio.HIGH)
+    gpio.write(WIFI_ERROR_LED, gpio.LOW)
+
+    mqtt_client:connect(MQTT_ADDRESS, MQTT_PORT, 0, function(cli)
+        print("MQTT: Connected.")
+    end)
 end
 
 function wifi_error()
-    tmr.stop(C_TMR)
-    gpio.write(1, gpio.LOW)
-    gpio.write(2, gpio.HIGH)
+    tmr.stop(WIFI_TMR)
+    tmr.stop(MQTT_TMR)
+
+    gpio.write(WIFI_OK_LED, gpio.LOW)
+    gpio.write(WIFI_ERROR_LED, gpio.HIGH)
+
+    mqtt_client.close()
 end
 
 function gpio_setup()
-    gpio.mode(1, gpio.OUTPUT)
-    gpio.mode(2, gpio.OUTPUT)
-    gpio.write(1, gpio.LOW)
-    gpio.write(2, gpio.LOW)
+    gpio.mode(WIFI_OK_LED, gpio.OUTPUT)
+    gpio.mode(WIFI_ERROR_LED, gpio.OUTPUT)
+    gpio.write(WIFI_OK_LED, gpio.LOW)
+    gpio.write(WIFI_ERROR_LED, gpio.LOW)
 end
 
 function wifi_setup()
     wifi.sta.eventMonReg(wifi.STA_IDLE, function()
-        print("Idle.")
+        print("WIFI: Idle.")
         wifi.sta.connect()
     end)
 
     wifi.sta.eventMonReg(wifi.STA_WRONGPWD, function()
         wifi_error()
-        print("Wrong password!")
+        print("WIFI: Wrong password!")
     end)
 
     wifi.sta.eventMonReg(wifi.STA_APNOTFOUND, function()
         wifi_error()
-        print("No AP found!")
+        print("WIFI: No AP found!")
     end)
 
     wifi.sta.eventMonReg(wifi.STA_FAIL, function()
         wifi_error()
-        print("Fail!")
+        print("WIFI: Fail!")
     end)
 
     wifi.sta.eventMonReg(wifi.STA_GOTIP, function()
         wifi_connected()
         ip = wifi.sta.getip()
-        print("Connected. Got IP: " .. ip)
+        print("WIFI: Connected. Got IP: " .. ip)
     end)
 
-    wifi.sta.eventMonReg(wifi.STA_CONNECTING, function(prevState)
+    wifi.sta.eventMonReg(wifi.STA_CONNECTING, function(prev_state)
         wifi_connecting()
-        if (prevState == wifi.STA_GOTIP) then
-            print("Connection Lost. Attempting to reconnect...")
+        if (prev_state == wifi.STA_GOTIP) then
+            print("WIFI: Connection Lost. Attempting to reconnect...")
         else
-            print("Connecting...")
+            print("WIFI: Connecting...")
         end
     end)
 
@@ -90,7 +106,7 @@ function wifi_setup()
         wifi.sta.config(ssid, pwd)
     until (line == nil)
 
-    file.close()
+    -- file.close()
 end
 
 function mqtt_setup()
@@ -98,24 +114,34 @@ function mqtt_setup()
     m:lwt("/lwt", "offline", 0, 0)
 
     m:on("connect", function(cli)
-        print ("Connected to MQTT Broker.")
+        print("WIFI: Connected to Broker.")
 
-        cli:subscribe("/locator", 0, function(cli)
-            print("subscribed")
+        cli:subscribe("/location", 0, function(cli)
+            print("MQTT: Subscribed to channel.")
+        end)
+
+        tmr.alarm(MQTT_TMR, 2000, 1, function()
+            mqtt_send()
         end)
     end)
 
     m:on("offline", function(cli)
-        print ("MQTT Client Offline!")
+        print("MQTT: Client Offline!")
+        tmr.stop(MQTT_TMR)
     end)
-
-    m:connect(MQTT_ADDRESS, MQTT_PORT, 0, function(cli)
-        print("connected")
-    end)
-
-    --m:publish("/locator", "hello", 0, 0, function(conn) print("sent") end)
 
     return m
+end
+
+function mqtt_send()
+    lat = "-26.8956032" -- TODO
+    lon = "-49.0794134" -- TODO
+    ts = get_time_iso_8601()
+    slug = "AAA1234" -- TODO
+    msg = string.format("@%s,$s,%s,%s", lat, lon, ts, slug)
+    mqtt_client:publish("/locator", msg, 0, 0, function(conn)
+        print("MQTT: Message sent.")
+    end)
 end
 
 -- I2C RTC is based on this link:
@@ -126,10 +152,10 @@ function i2c_setup()
 end
 
 function to_decimal(val)
-  local hl = bit.rshift(val, 4)
-  local hh = bit.band(val, 0xf)
-  local hr = string.format("%d%d", hl, hh)
-  return string.format("%d%d", hl, hh)
+    local hl = bit.rshift(val, 4)
+    local hh = bit.band(val, 0xf)
+    local hr = string.format("%d%d", hl, hh)
+    return string.format("%d%d", hl, hh)
 end
 
 function to_bcd(val)
@@ -140,23 +166,30 @@ function to_bcd(val)
 end
 
 function get_time()
-  i2c.start(0)
-  i2c.address(0, 0x68, i2c.TRANSMITTER)
-  i2c.write(0, 0x00) -- set DS3231 register pointer to 00h
-  i2c.stop(0)
+    i2c.start(0)
+    i2c.address(0, 0x68, i2c.TRANSMITTER)
+    i2c.write(0, 0x00) -- set DS3231 register pointer to 00h
+    i2c.stop(0)
 
-  i2c.start(0)
-  i2c.address(0, 0x68, i2c.RECEIVER)
-  local c = i2c.read(0, 7)
-  i2c.stop(0)
+    i2c.start(0)
+    i2c.address(0, 0x68, i2c.RECEIVER)
+    local c = i2c.read(0, 7)
+    i2c.stop(0)
 
-  return to_decimal(string.byte(c, 1)), -- second
-         to_decimal(string.byte(c, 2)), -- minute
-         to_decimal(string.byte(c, 3)), -- hour
-         to_decimal(string.byte(c, 4)), -- day of week
-         to_decimal(string.byte(c, 5)), -- day of month
-         to_decimal(string.byte(c, 6)), -- month
-         to_decimal(string.byte(c, 7)) -- year
+    return to_decimal(string.byte(c, 1)), -- second
+           to_decimal(string.byte(c, 2)), -- minute
+           to_decimal(string.byte(c, 3)), -- hour
+           to_decimal(string.byte(c, 4)), -- day of week
+           to_decimal(string.byte(c, 5)), -- day of month
+           to_decimal(string.byte(c, 6)), -- month
+           to_decimal(string.byte(c, 7)) -- year
+end
+
+function get_time_iso_8601()
+    -- see: https://en.wikipedia.org/wiki/ISO_8601
+    -- example: 2015-09-08T01:55:28+00:00
+    second, minute, hour, day_of_week, day_of_month, month, year = get_time()
+    return string.format("20%s-%s-%s-T%s:%s:%s-03:00", year, month, day_of_month, hour, minute, second)
 end
 
 function set_time(hour, minute, second, day_of_week, date, month, year)
@@ -173,13 +206,11 @@ function set_time(hour, minute, second, day_of_week, date, month, year)
     i2c.stop(0)
 end
 
--- Examples RTC
--- set_time(10, 36, 0, 6, 4, 9, 15)
--- s, m, h, d, dt, mn, y = get_time()
--- print(string.format("%s/%s/20%s", dt, mn, y))
--- print(string.format("%s:%s:%s", h, m, s))
-
 gpio_setup()
 i2c_setup()
+mqtt_client = mqtt_setup()
 wifi_setup()
-mqtt_setup()
+
+-- Examples RTC
+-- set_time(10, 36, 0, 6, 4, 9, 15)
+-- print(get_time_iso_8601())
