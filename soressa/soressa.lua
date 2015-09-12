@@ -24,9 +24,7 @@ network.on_error = function (error)
 end
 
 mq.on_connect = function (client)
-    client:subscribe("/location", 0, function(cli)
-        logger.i("MQTT: Subscribed to channel.")
-    end)
+    mq.subscribe("/location")
 end
 
 mq.on_disconnect = function ()
@@ -37,10 +35,7 @@ gps.on_data_received = function (data)
         time = rtc.get_time_iso_8601()
         bus_id = "AAA1234" -- TODO
         msg = string.format("%s,$s,%s", data, time, bus_id)
-
-        mqtt_client:publish("/location", msg, 0, 0, function(conn)
-            logger.i("MQTT: Message sent.")
-        end)
+        mq.publish("/location", msg)
     end
 end
 

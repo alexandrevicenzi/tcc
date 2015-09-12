@@ -9,8 +9,6 @@ local function wifi_error(error)
 end
 
 function network.setup()
-    gpio_setup()
-
     wifi.sta.eventMonReg(wifi.STA_IDLE, function()
         logger.i("WIFI: Idle.")
         wifi.sta.connect()
