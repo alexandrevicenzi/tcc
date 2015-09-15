@@ -2,7 +2,6 @@ local logger = require "logger"
 
 local mq = {}
 local is_connected = false
-local client = nil
 
 local MQTT_ADDRESS = "tcc.alexandrevicenzi.com"
 local MQTT_PORT = 1883
@@ -12,62 +11,59 @@ local MQTT_TIMEOUT = 120
 
 mq.on_connect = nil
 mq.on_disconnect = nil
+mq.is_connected = false
+mq._client = nil
 
 function mq.setup()
-    m = mqtt.Client("soressa", MQTT_TIMEOUT, MQTT_AUTH_USER, MQTT_AUTH_PWD)
-    client = m
+    logger.i("MQTT: Setup.")
 
-    m:lwt("/lwt", "offline", 0, 0)
+    mq._client = mqtt.Client("soressa", MQTT_TIMEOUT, MQTT_AUTH_USER, MQTT_AUTH_PWD)
+    mq._client:lwt("/lwt", "offline", 0, 0)
 
-    m:on("connect", function (cli)
-        logger.i("MQTT: Connected to Broker.")
-        is_connected = true
-
-        if mq.on_connect ~= nil then
-            mq.on_connect(cli)
-        end
-    end)
-
-    m:on("offline", function (cli)
+    mq._client:on("offline", function (cli)
         logger.i("MQTT: Client Offline!")
-        is_connected = false
+        mq.is_connected = false
 
-        if mq.on_disconnect ~= nil then
+        if mq.on_disconnect then
             mq.on_disconnect()
         end
     end)
 end
 
 function mq.connect()
-    if client then
-        client:connect(MQTT_ADDRESS, MQTT_PORT, 0, function (cli)
-            logger.i("MQTT: Connected.")
+    if mq._client then
+        mq._client:connect(MQTT_ADDRESS, MQTT_PORT, 0, function (cli)
+            mq.is_connected = true
+
+            logger.i("MQTT: Connected to Broker.")
+
+            if mq.on_connect then
+                mq.on_connect(cli)
+            end
         end)
     end
 end
 
 function mq.subscribe(channel)
-    if client then
-        client:subscribe(channel, 0, function (cli)
+    if mq._client and mq.is_connected then
+        mq._client:subscribe(channel, 0, function (cli)
             logger.i("MQTT: Subscribed to channel.")
         end)
     end
 end
 
 function mq.publish(channel, msg)
-    client:publish(channel, msg, 0, 0, function (cli)
-        logger.i("MQTT: Message sent.")
-    end)
-end
-
-function mq.disconnect()
-    if client then
-        client:close()
+    if mq._client and mq.is_connected then
+        mq._client:publish(channel, msg, 0, 0, function (cli)
+            logger.i("MQTT: Message sent.")
+        end)
     end
 end
 
-function mq.is_connected()
-    return is_connected
+function mq.disconnect()
+    if mq._client and mq.is_connected then
+        mq._client:close()
+    end
 end
 
 return mq

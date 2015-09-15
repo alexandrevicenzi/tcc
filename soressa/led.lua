@@ -1,3 +1,5 @@
+local logger = require "logger"
+
 local led = {}
 
 local led_state = false
@@ -7,6 +9,7 @@ local WIFI_ERROR_LED = 2 -- pin 2 (GPIO 4)
 local WIFI_TMR = 0
 
 function led.setup()
+    logger.i("LED: Setup.")
     gpio.mode(WIFI_OK_LED, gpio.OUTPUT)
     gpio.mode(WIFI_ERROR_LED, gpio.OUTPUT)
     gpio.write(WIFI_OK_LED, gpio.LOW)

@@ -25,6 +25,7 @@ end
 
 mq.on_connect = function (client)
     mq.subscribe("/location")
+    mq.publish("/location", "test message!!!")
 end
 
 mq.on_disconnect = function ()

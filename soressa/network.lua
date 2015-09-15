@@ -3,12 +3,14 @@ local logger = require "logger"
 local network = {}
 
 local function wifi_error(error)
-    if network.on_error ~= nil then
+    if network.on_error then
         network.on_error(error)
     end
 end
 
 function network.setup()
+    logger.i("WIFI: Setup.")
+
     wifi.sta.eventMonReg(wifi.STA_IDLE, function()
         logger.i("WIFI: Idle.")
         wifi.sta.connect()
@@ -33,7 +35,7 @@ function network.setup()
         ip = wifi.sta.getip()
         logger.i("WIFI: Connected. Got IP: " .. ip)
 
-        if network.on_connect ~= nil then
+        if network.on_connect then
             network.on_connect(ip)
         end
     end)
@@ -42,14 +44,14 @@ function network.setup()
         if (prev_state == wifi.STA_GOTIP) then
             logger.i("WIFI: Connection Lost. Attempting to reconnect...")
 
-            if network.on_disconnect ~= nil then
+            if network.on_disconnect then
                 network.on_disconnect()
             end
         else
             logger.i("WIFI: Connecting...")
         end
 
-        if network.on_connecting ~= nil then
+        if network.on_connecting then
             network.on_connecting()
         end
     end)
@@ -59,7 +61,7 @@ function network.setup()
     wifi.setmode(wifi.STATION)
     wifi.sta.autoconnect(1)
 
-    wifi.sta.config("ssid", "pwd")
+    wifi.sta.config("TP-LINK_607D7C", "F6607D7C")
 end
 
 function network.is_connected()
