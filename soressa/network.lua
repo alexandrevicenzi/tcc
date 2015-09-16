@@ -32,7 +32,7 @@ function network.setup()
     end)
 
     wifi.sta.eventMonReg(wifi.STA_GOTIP, function()
-        ip = wifi.sta.getip()
+        local ip = wifi.sta.getip()
         logger.i("WIFI: Connected. Got IP: " .. ip)
 
         if network.on_connect then

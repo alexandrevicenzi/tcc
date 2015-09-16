@@ -5,6 +5,8 @@ local mq = require "mq"
 local network = require "network"
 local rtc = require "rtc"
 
+logger.enabled = false
+
 network.on_connect = function (ip)
     led.wifi_connected()
     mq.connect()
@@ -25,7 +27,6 @@ end
 
 mq.on_connect = function (client)
     mq.subscribe("/location")
-    mq.publish("/location", "test message!!!")
 end
 
 mq.on_disconnect = function ()
@@ -35,7 +36,8 @@ gps.on_data_received = function (data)
     if network.is_connected and mq.is_connected then
         time = rtc.get_time_iso_8601()
         bus_id = "AAA1234" -- TODO
-        msg = string.format("%s,$s,%s", data, time, bus_id)
+        -- json payload
+        msg = string.format("{\"nmea\":\"%s\",\"ts\":\"$s\",\"id\":\"%s\"", data, time, bus_id)
         mq.publish("/location", msg)
     end
 end

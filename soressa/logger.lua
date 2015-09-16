@@ -1,19 +1,29 @@
 local logger = {}
 
+logger.enabled = true
+
 function logger.i (...)
-    print("INFO", ...)
+    if logger.enabled then
+        print("INFO", ...)
+    end
 end
 
 function logger.w (...)
-    print("WARNING", ...)
+    if logger.enabled then
+        print("WARNING", ...)
+    end
 end
 
 function logger.e (...)
-    print("ERROR", ...)
+    if logger.enabled then
+        print("ERROR", ...)
+    end
 end
 
 function logger.d (...)
-    print("DEBUG", ...)
+    if logger.enabled then
+        print("DEBUG", ...)
+    end
 end
 
 return logger

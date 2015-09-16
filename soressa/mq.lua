@@ -63,6 +63,7 @@ end
 function mq.disconnect()
     if mq._client and mq.is_connected then
         mq._client:close()
+        logger.i("MQTT: Disconnected.")
     end
 end
 
