@@ -13,6 +13,7 @@ local function stop_events()
 end
 
 local function wifi_err(...)
+    print("Wifi error!")
     stop_events()
     led.stop_blink(led.WIFI_OK)
     led.off(led.WIFI_OK)
@@ -24,22 +25,16 @@ local function wifi_err(...)
     end)
 end
 
-local function on_ap(data)
+local function send_data(channel, data)
     time = time.time()
     local msg = string.format("{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}", data, time, DEVICE_ID)
-    mq:publish("/accesspoint", msg, 0, 0, void)
-end
-
-local function on_gps(data)
-    time = time.time()
-    local msg = string.format("{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}", data, time, DEVICE_ID)
-    mq:publish("/gpslocation", msg, 0, 0, void)
+    mq:publish(channel, msg, 0, 0, void)
 end
 
 local function scan_ap(t)
     ssid, pwd, set, bssid = wifi.sta.getconfig()
     ap = t[bssid]
-    if ap then on_ap(bssid.. "," ..ap) end
+    if ap then send_data("/accesspoint", bssid.. "," ..ap) end
 end
 
 led.setup()
@@ -55,19 +50,20 @@ on_wifi(wifi.STA_FAIL, wifi_err)
 on_wifi(wifi.STA_IDLE, function () wifi.sta.connect() end)
 
 on_wifi(wifi.STA_GOTIP, function ()
+    print("Wifi connected.")
     led.off(led.WIFI_ERROR)
     led.stop_blink(led.WIFI_OK)
     led.on(led.WIFI_OK)
 
     mq:connect("tcc.alexandrevicenzi.com", 1883, 0, function ()
+        print("MQTT connected.")
+        led.on(led.MQTT)
         mq:subscribe("/accesspoint", 0, void)
         mq:subscribe("/gpslocation", 0, void)
 
-        led.on(led.MQTT)
-
         uart.on("data", "\n", function (data)
             if (string.sub(data, 1, 1) == "$") then
-                on_gps(string.sub(data, 1, string.len(data) - 1))
+                send_data("/gpslocation", string.sub(data, 1, string.len(data) - 1))
             else
                 print(data)
             end
@@ -81,6 +77,7 @@ on_wifi(wifi.STA_GOTIP, function ()
 end)
 
 on_wifi(wifi.STA_CONNECTING, function ()
+    print("Wifi connecting...")
     stop_events()
     led.off(led.WIFI_ERROR)
     led.off(led.MQTT)
