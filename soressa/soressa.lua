@@ -1,51 +1,93 @@
-local gps = require "gps"
 local led = require "led"
-local logger = require "logger"
-local mq = require "mq"
-local network = require "network"
-local rtc = require "rtc"
+local time = require "time"
 
-logger.enabled = false
+local mq
+local DEVICE_ID = wifi.sta.getmac()
+local on_wifi = wifi.sta.eventMonReg
+local void = function (...) end
 
-network.on_connect = function (ip)
-    led.wifi_connected()
-    mq.connect()
+local function stop_events()
+    uart.on("data")
+    tmr.stop(1)
+    if mq then mq:close() end
 end
 
-network.on_connecting = function (ip)
-    led.wifi_connecting()
+local function wifi_err(...)
+    stop_events()
+    led.stop_blink(led.WIFI_OK)
+    led.off(led.WIFI_OK)
+    led.on(led.WIFI_ERROR)
+
+    tmr.alarm(2, 5000, 0, function ()
+        tmr.wdclr()
+        wifi.sta.connect()
+    end)
 end
 
-network.on_disconnect = function ()
-    mq.disconnect()
+local function on_ap(data)
+    time = time.time()
+    local msg = string.format("{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}", data, time, DEVICE_ID)
+    mq:publish("/accesspoint", msg, 0, 0, void)
 end
 
-network.on_error = function (error)
-    led.wifi_error()
-    mq.disconnect()
+local function on_gps(data)
+    time = time.time()
+    local msg = string.format("{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}", data, time, DEVICE_ID)
+    mq:publish("/gpslocation", msg, 0, 0, void)
 end
 
-mq.on_connect = function (client)
-    mq.subscribe("/location")
-end
-
-mq.on_disconnect = function ()
-end
-
-gps.on_data_received = function (data)
-    if network.is_connected and mq.is_connected then
-        time = rtc.get_time_iso_8601()
-        bus_id = "AAA1234" -- TODO
-        -- json payload
-        msg = string.format("{\"nmea\":\"%s\",\"ts\":\"$s\",\"id\":\"%s\"", data, time, bus_id)
-        mq.publish("/location", msg)
-    end
+local function scan_ap(t)
+    ssid, pwd, set, bssid = wifi.sta.getconfig()
+    ap = t[bssid]
+    if ap then on_ap(bssid.. "," ..ap) end
 end
 
 led.setup()
-rtc.setup()
-gps.setup()
-mq.setup()
--- network trigger almost all events
--- it's good to put everything before.
-network.setup()
+time.setup()
+
+mq = mqtt.Client("soressa", 120, "guest", "guest")
+mq:lwt("/lwt", "offline", 0, 0)
+mq:on("offline", function () led.off(led.MQTT) end)
+
+on_wifi(wifi.STA_WRONGPWD, wifi_err)
+on_wifi(wifi.STA_APNOTFOUND, wifi_err)
+on_wifi(wifi.STA_FAIL, wifi_err)
+on_wifi(wifi.STA_IDLE, function () wifi.sta.connect() end)
+
+on_wifi(wifi.STA_GOTIP, function ()
+    led.off(led.WIFI_ERROR)
+    led.stop_blink(led.WIFI_OK)
+    led.on(led.WIFI_OK)
+
+    mq:connect("tcc.alexandrevicenzi.com", 1883, 0, function ()
+        mq:subscribe("/accesspoint", 0, void)
+        mq:subscribe("/gpslocation", 0, void)
+
+        led.on(led.MQTT)
+
+        uart.on("data", "\n", function (data)
+            if (string.sub(data, 1, 1) == "$") then
+                on_gps(string.sub(data, 1, string.len(data) - 1))
+            else
+                print(data)
+            end
+        end, 0)
+
+        tmr.alarm(1, 10000, 1, function ()
+            tmr.wdclr()
+            wifi.sta.getap(1, scan_ap)
+        end)
+    end)
+end)
+
+on_wifi(wifi.STA_CONNECTING, function ()
+    stop_events()
+    led.off(led.WIFI_ERROR)
+    led.off(led.MQTT)
+    led.start_blink(led.WIFI_OK)
+end)
+
+wifi.sta.eventMonStart()
+
+wifi.setmode(wifi.STATION)
+wifi.sta.autoconnect(1)
