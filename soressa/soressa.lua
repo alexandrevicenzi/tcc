@@ -1,3 +1,4 @@
+local ap = require "ap"
 local led = require "led"
 local time = require "time"
 
@@ -26,15 +27,34 @@ local function wifi_err(...)
 end
 
 local function send_data(channel, data)
-    time = time.time()
-    local msg = string.format("{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}", data, time, DEVICE_ID)
+    local ts = time.time()
+    local msg = string.format("{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}", data, ts, DEVICE_ID)
     mq:publish(channel, msg, 0, 0, void)
+    print("Message sent to ".. channel)
 end
 
 local function scan_ap(t)
-    ssid, pwd, set, bssid = wifi.sta.getconfig()
-    ap = t[bssid]
-    if ap then send_data("/accesspoint", bssid.. "," ..ap) end
+    local ssid, pwd, set, bssid = wifi.sta.getconfig()
+    local c = (t[bssid])
+    if c then send_data("/accesspoint", bssid.. "," ..c) end
+end
+
+local function load_ap()
+    if file.open("wpa.conf", "r") then
+        local line, i, j, l, ssid, pwd, bssid
+        line = file.readline()
+
+        while line ~= nil do
+            i, j = string.find(line, ",", 1)
+            ssid = string.sub(line, 0, i - 1)
+            j, l = string.find(line, ",", i + 1)
+            pwd = string.sub(line, i + 1, j - 1)
+            bssid  = string.sub(line, j + 1, string.len(line))
+            wifi.sta.config(ssid, pwd, 1, bssid)
+        end
+
+        file.close()
+    end
 end
 
 led.setup()
@@ -58,8 +78,6 @@ on_wifi(wifi.STA_GOTIP, function ()
     mq:connect("tcc.alexandrevicenzi.com", 1883, 0, function ()
         print("MQTT connected.")
         led.on(led.MQTT)
-        mq:subscribe("/accesspoint", 0, void)
-        mq:subscribe("/gpslocation", 0, void)
 
         uart.on("data", "\n", function (data)
             if (string.sub(data, 1, 1) == "$") then
@@ -88,3 +106,5 @@ wifi.sta.eventMonStart()
 
 wifi.setmode(wifi.STATION)
 wifi.sta.autoconnect(1)
+
+load_ap()
