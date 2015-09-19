@@ -1,16 +1,19 @@
 local led_state = false
 
-local WIFI_OK_LED = 1 -- pin 1 (GPIO 5)
-local WIFI_ERROR_LED = 2 -- pin 2 (GPIO 4)
-local MQTT_LED = 3 -- TODO
+local ERROR_LED = 2 -- pin 2 (GPIO 4)
+local GPS_LED = 5 -- pin 5 (GPIO 14)
+local MQTT_LED = 0 -- pin 0 (GPIO 16)
+local WIFI_LED = 1 -- pin 1 (GPIO 5)
 
 local function setup()
-    gpio.mode(WIFI_OK_LED, gpio.OUTPUT)
-    gpio.mode(WIFI_ERROR_LED, gpio.OUTPUT)
+    gpio.mode(ERROR_LED, gpio.OUTPUT)
     gpio.mode(MQTT_LED, gpio.OUTPUT)
-    gpio.write(WIFI_OK_LED, gpio.LOW)
-    gpio.write(WIFI_ERROR_LED, gpio.LOW)
+    gpio.mode(GPS_LED, gpio.OUTPUT)
+    gpio.mode(WIFI_LED, gpio.OUTPUT)
+    gpio.write(ERROR_LED, gpio.LOW)
+    gpio.write(GPS_LED, gpio.LOW)
     gpio.write(MQTT_LED, gpio.LOW)
+    gpio.write(WIFI_LED, gpio.LOW)
 end
 
 local function start_blink(led)
@@ -46,7 +49,7 @@ return {
     stop_blink = stop_blink,
     on = on,
     off = off,
-    WIFI_OK = WIFI_OK_LED,
-    WIFI_ERROR = WIFI_ERROR_LED,
+    WIFI = WIFI_LED,
+    ERROR = ERROR_LED,
     MQTT = MQTT_LED,
 }
