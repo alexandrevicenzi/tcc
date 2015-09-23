@@ -4,23 +4,13 @@ Well, at least I'll try :joy:
 
 ## BusTracker
 
-The main Web application.
-
-## Garogh
-
-Position System Interface.
-
-This module store data received from Morudall and make it available for BusTracker or any other system.
+The main Web application to check where your bus is.
 
 ## Morudall
 
-MQTT Client Subscriber.
-
-This module subscribe to a MQTT Broker and listen for messages from Soressa. If a message is receive, it send to Garogh.
+This module subscribe to a MQTT Broker and listen for messages from Soressa. Process and store all messages from Soressa.
 
 ## Soressa
-
-MQTT Client Publisher.
 
 This module runs on ESP8266 and send messagens to a MQTT Broker.
 
