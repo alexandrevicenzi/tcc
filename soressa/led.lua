@@ -49,7 +49,8 @@ return {
     stop_blink = stop_blink,
     on = on,
     off = off,
-    WIFI = WIFI_LED,
     ERROR = ERROR_LED,
+    GPS = GPS_LED,
     MQTT = MQTT_LED,
+    WIFI = WIFI_LED
 }

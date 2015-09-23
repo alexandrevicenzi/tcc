@@ -1,4 +1,3 @@
-local ap = require "ap"
 local led = require "led"
 local time = require "time"
 
@@ -51,8 +50,9 @@ local function load_ap()
             ssid = string.sub(line, 0, i - 1)
             j, l = string.find(line, ",", i + 1)
             pwd = string.sub(line, i + 1, j - 1)
-            bssid  = string.sub(line, j + 1, string.len(line))
+            bssid  = string.sub(line, j + 1, string.len(line) - 1)
             wifi.sta.config(ssid, pwd, 1, bssid)
+            line = file.readline()
         end
 
         file.close()
@@ -75,7 +75,7 @@ on_wifi(wifi.STA_GOTIP, function ()
     print("Wifi connected.")
     led.off(led.ERROR)
     led.stop_blink()
-    led.on(led.WIFI_OK)
+    led.on(led.WIFI)
 
     mq:connect("tcc.alexandrevicenzi.com", 1883, 0, function ()
         print("MQTT connected.")
@@ -89,7 +89,7 @@ on_wifi(wifi.STA_GOTIP, function ()
             end
         end, 0)
 
-        tmr.alarm(1, 10000, 1, function ()
+        tmr.alarm(1, 30000, 1, function ()
             tmr.wdclr()
             wifi.sta.getap(1, scan_ap)
         end)
