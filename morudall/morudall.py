@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import dateutil.parser
+import json
 import paho.mqtt.client as mqtt
 
 from collections import namedtuple
+from pymongo import MongoClient
 
 
 Auth = namedtuple('Auth', ['user', 'pwd'])
@@ -16,44 +19,81 @@ MONGO_ADDRESS = MQTT_ADDRESS
 MONGO_PORT = 27017
 
 
-def on_connect(client, userdata, flags, rc):
-    print('Connected with result code %s' % str(rc))
-    client.subscribe('/location')
-    client.publish('/location', '@-26.8956032,-49.0794134,124123421,AAA1234')
+class Morudall(mqtt.Client):
 
+    def __init__(self, debug):
+        super(Morudall, self).__init__()
+        self.on_connect = self._on_connect
+        self.on_message = self._on_message
+        self._debug = debug
 
-def on_message(client, userdata, msg):
-    if msg.topic == '/location' and msg.payload.startswith('@'):
-        lat, lon, ts, slug = msg.payload[1:].split(',')
-        client.save_data(client, slug, float(lat), float(lon), ts)
+        uri = 'mongodb://%s:%d/' % (MONGO_ADDRESS, MONGO_PORT)
+        mc = MongoClient(uri)
+        self._db = mc['morudall']
 
+    def _on_connect(self, client, userdata, flags, rc):
+        print('Connected with result code: %s' % str(rc))
+        self.subscribe('/accesspoint')
+        self.subscribe('/gpslocation')
 
-def save_data(client, slug, lat, lon, date):
-    client.db.add_location(slug, lat, lon, date)
+    def _on_message(self, client, userdata, msg):
+        if msg.topic == '/accesspoint':
+            try:
+                payload = json.loads(msg.payload)
+                device_id = payload['id']
+                dt = dateutil.parser.parse(payload['ts'])
+                bssid, ssid, rssi, authmode, channel = payload['data'].split(',')
 
+                data = {
+                    'device': device_id,
+                    'time': dt,
+                    'ap': {
+                        'bssid': bssid,
+                        'ssid': ssid,
+                        'rssi': rssi,
+                        'authmode': authmode,
+                        'channel': channel
+                    }
+                }
 
-def log_data(client, slug, lat, lon, date):
-    print('latitude %f and longitude %f from %s at %s' % (lat, lon, slug, date))
+                self._save_ap_data(data)
+            except:
+                pass
+
+        if msg.topic == '/gpslocation':
+            try:
+                payload = json.loads(msg.payload)
+                device_id = payload['id']
+                dt = dateutil.parser.parse(payload['ts'])
+                nmea_sentece = payload['data']
+
+                data = {
+                    'device': device_id,
+                    'time': dt,
+                    'gps': {
+                        # TODO
+                    }
+                }
+
+                self._save_gps_data(data)
+            except:
+                pass
+
+    def _save_ap_data(self, data):
+        return self._db.ap_data.insert_one(data).inserted_id
+
+    def _save_gps_data(self, data):
+        return self._db.gps_data.insert_one(data).inserted_id
+
+    def connect(self):
+        self.username_pw_set(MQTT_AUTH.user, MQTT_AUTH.pwd)
+        super(Morudall, self).connect(MQTT_ADDRESS, MQTT_PORT, MQTT_TIMEOUT)
 
 
 def loop(debug=False):
-    client = mqtt.Client()
-
-    if debug:
-        print('Debug mode enabled!')
-        client.save_data = log_data
-    else:
-        from garogh import Locator
-        db = Locator('mongodb://%s:%d/' % (MONGO_ADDRESS, MONGO_PORT))
-        client.db = db
-        client.save_data = save_data
-
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.username_pw_set(MQTT_AUTH.user, MQTT_AUTH.pwd)
-    client.connect(MQTT_ADDRESS, MQTT_PORT, MQTT_TIMEOUT)
-
-    client.loop_forever()
+    m = Morudall(debug)
+    m.connect()
+    m.loop_forever()
 
 if __name__ == '__main__':
     import sys
