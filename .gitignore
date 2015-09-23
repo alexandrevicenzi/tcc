@@ -58,3 +58,6 @@ target/
 
 venv
 db.sqlite3
+*.bin
+wpa.conf
+*.pdf
