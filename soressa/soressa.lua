@@ -6,9 +6,21 @@ local DEVICE_ID = wifi.sta.getmac()
 local on_wifi = wifi.sta.eventMonReg
 local void = function (...) end
 
+local function gps_on()
+    led.on(led.GPS)
+    gpio.write(4, gpio.LOW)
+end
+
+local function gps_off()
+    led.off(led.GPS)
+    gpio.write(4, gpio.HIGH)
+end
+
 local function stop_events()
+    gps_off()
     uart.on("data")
     tmr.stop(1)
+    tmr.stop(3)
     if mq then mq:close() end
 end
 
@@ -59,6 +71,7 @@ local function load_ap()
     end
 end
 
+gpio.mode(4, gpio.OUTPUT)
 led.setup()
 time.setup()
 
@@ -83,15 +96,26 @@ on_wifi(wifi.STA_GOTIP, function ()
 
         uart.on("data", "\n", function (data)
             if (string.sub(data, 1, 1) == "$") then
-                send_data("/gpslocation", string.sub(data, 1, string.len(data) - 1))
-            else
-                print(data)
+                local sentence = string.sub(data, 2, 6)
+
+                if sentence == "GPGLL" or
+                   sentence == "GPGGA" or
+                   sentence == "GPVTG"
+                then
+                    --gps_off()
+                    send_data("/gpslocation", string.sub(data, 1, string.len(data) - 2))
+                end
             end
         end, 0)
 
         tmr.alarm(1, 30000, 1, function ()
             tmr.wdclr()
             wifi.sta.getap(1, scan_ap)
+        end)
+
+        tmr.alarm(3, 30000, 0, function ()
+            tmr.wdclr()
+            gps_on()
         end)
     end)
 end)
