@@ -14,3 +14,21 @@ html, body {
 .map {
     height: 100%;
 }
+
+.bus-info h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 25px;
+}
+
+.bus-info label:after {
+    content: ':'
+}
+
+.bus-info label {
+    padding-right: 4px;
+}
+
+.bus-info .last {
+    margin-top: 10px;
+}

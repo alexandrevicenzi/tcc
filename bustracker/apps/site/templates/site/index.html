@@ -1,19 +1,39 @@
 {% extends "site/base.html" %}
 
 {% load static %}
+{% load settings_extras %}
 
 {% block content %}
   <div id="map" class="map"></div>
 {% endblock %}
 
 {% block additional_js %}
-  <script type="text/javascript" src="{% static 'js/google-maps-bus.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/map.js' %}"></script>
   <script type="text/javascript">
-    function initMap() {
-      map.init("{% static 'img/bus.png' %}", -26.9115028, -49.081016);
+    function locationError(error) {
+        console.warn('GeoLocation error!. Using default location.');
+
+        initMap({
+          coords: {
+            latitude: {% setting "default_latitude" %},
+            longitude: {% setting "default_longitude" %}
+          }
+        }, true);
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(initMap, locationError);
+      } else {
+        locationError();
+      }
+    }
+
+    function initMap(position, fail) {
+      map.init("{% static 'img/bus.png' %}", position.coords.latitude, position.coords.longitude, !fail);
       map.addBus('123456', '11 - Atero/Fonte', -26.9115028, -49.081016);
       map.addBus('234567', '32 - Caçadores', -26.9132262, -49.080765);
     }
   </script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&signed_in=true&callback=initMap"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key={% setting 'google_maps_api_key' %}&signed_in=true&callback=getLocation"></script>
 {% endblock %}
