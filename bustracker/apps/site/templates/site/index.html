@@ -52,5 +52,6 @@
       })
     }
   </script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key={% setting 'google_maps_api_key' %}&signed_in=true&callback=getLocation"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key={% setting 'google_maps_api_key' %}&callback=getLocation"
+          async defer></script>
 {% endblock %}
