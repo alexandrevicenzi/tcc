@@ -57,8 +57,8 @@ class Morudall(mqtt.Client):
                 }
 
                 self._save_ap_data(data)
-            except:
-                pass
+            except Exception as e:
+                print(str(e))
 
         if msg.topic == '/gpslocation':
             try:
@@ -70,20 +70,24 @@ class Morudall(mqtt.Client):
                 data = {
                     'device': device_id,
                     'time': dt,
-                    'gps': {
-                        # TODO
-                    }
+                    'gps': nmea_sentece
                 }
 
                 self._save_gps_data(data)
-            except:
-                pass
+            except Exception as e:
+                print(str(e))
 
     def _save_ap_data(self, data):
-        return self._db.ap_data.insert_one(data).inserted_id
+        if self._debug:
+            print(data)
+        else:
+            return self._db.ap_data.insert_one(data).inserted_id
 
     def _save_gps_data(self, data):
-        return self._db.gps_data.insert_one(data).inserted_id
+        if self._debug:
+            print(data)
+        else:
+            return self._db.gps_data.insert_one(data).inserted_id
 
     def connect(self):
         self.username_pw_set(MQTT_AUTH.user, MQTT_AUTH.pwd)

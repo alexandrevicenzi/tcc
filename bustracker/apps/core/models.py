@@ -1,45 +1,35 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
+
+from utils.gps import get_gps_data
 
 
 class BusTerminal(models.Model):
-    ''' Terminal de ônibus. '''
-    is_active = models.BooleanField(default=True)
-    name = models.CharField(max_length=100)
-    slug = models.CharField(max_length=10)
-    latitude = models.DecimalField(max_digits=8, decimal_places=5)
-    longitude = models.DecimalField(max_digits=8, decimal_places=5)
-
-    def distance_from(self, latitude, longitude):
-        '''
-            This will return the distance in metters
-            between any point and this terminal.
-
-            Haversine formula (https://en.wikipedia.org/wiki/Haversine_formula)
-        '''
-        return 0
+    is_active = models.BooleanField(verbose_name=_(u'Ativo'), default=True)
+    name = models.CharField(verbose_name=_(u'Nome'), max_length=100)
+    details = models.TextField(verbose_name=_(u'Detalhes'), max_length=250, blank=True, null=True)
+    latitude = models.DecimalField(verbose_name=_(u'Latitude'), max_digits=12, decimal_places=8)
+    longitude = models.DecimalField(verbose_name=_(u'Longitude'), max_digits=12, decimal_places=8)
 
 
 class BusRoute(models.Model):
-    ''' Linha de ônibus. '''
-    is_active = models.BooleanField(default=True)
-    code = models.IntegerField()
-    route = models.CharField(max_length=100)
-    details = models.CharField(max_length=250)
-    terminal = models.ForeignKey(BusTerminal, related_name='route_set')
+    is_active = models.BooleanField(verbose_name=_(u'Ativo'), default=True)
+    name = models.CharField(verbose_name=_(u'Nome'), max_length=100)
+    details = models.TextField(verbose_name=_(u'Detalhes'), max_length=250, blank=True, null=True)
+    code = models.IntegerField(verbose_name=_(u'Código'))
+    terminals = models.ManyToManyField(BusTerminal, related_name='route_set', verbose_name=_(u'Terminais de Parada (+)'))
+    from_terminal = models.ForeignKey(BusTerminal, related_name='from_set', verbose_name=_(u'Terminal de Saída'))
+    to_terminal = models.ForeignKey(BusTerminal, related_name='to_set', verbose_name=_(u'Terminal de Chegada'))
 
 
 class Bus(models.Model):
-    ''' Ônibus da frota. '''
-    is_active = models.BooleanField(default=True)
-    name = models.CharField(max_length=100)
-    slug = models.CharField(max_length=10)
-    capacity = models.IntegerField(default=0)
-    route = models.ForeignKey(BusRoute, related_name='bus_set')
+    is_active = models.BooleanField(verbose_name=_(u'Ativo'), default=True)
+    name = models.CharField(verbose_name=_(u'Nome'), max_length=100)
+    details = models.TextField(verbose_name=_(u'Detalhes'), max_length=250, blank=True, null=True)
+    device_id = models.CharField(verbose_name=_(u'ID do Dispositivo'), max_length=17, help_text='MAC Address.')
+    route = models.ForeignKey(BusRoute, related_name='bus_set', verbose_name=_(u'Rota'))
 
-    def get_last_position(self):
-        ''' Return the last know bus position.
-        If there's no position return (0,0). '''
-        latitude = longitude = 0
-        return latitude, longitude
+    def get_gps_data(self):
+        return get_gps_data(self.device_id)

@@ -8,20 +8,20 @@ var map = function (module) {
         Init the Map.
         Call this before everything.
     */
-    module.init = function (busImgPath, initialLatitude, initialLongitude, userLocation) {
+    module.init = function (options) {
         var map = new google.maps.Map(document.getElementById('map'), {
             zoom: 15,
             center: {
-                lat: initialLatitude,
-                lng: initialLongitude
+                lat: options.initialLatitude,
+                lng: options.initialLongitude
             }
         });
 
-        if (userLocation) {
+        if (options.isUserLocation) {
             var marker = new google.maps.Marker({
                 position: {
-                    lat: initialLatitude,
-                    lng: initialLongitude
+                    lat: options.initialLatitude,
+                    lng: options.initialLongitude
                 },
                 animation: google.maps.Animation.DROP,
                 map: map,
@@ -36,7 +36,8 @@ var map = function (module) {
         transitLayer.setMap(map);
 
         module._map = map;
-        module._busImgPath = busImgPath;
+        module._busImgPath = options.busImgPath;
+        module._busTerminalImgPath = options.busTerminalImgPath;
         module._busList = {};
     };
 
@@ -68,11 +69,37 @@ var map = function (module) {
         });
 
         marker.addListener('click', function() {
-            console.log(arguments);
             infowindow.open(module._map, marker);
         });
 
         module._busList[id] = marker;
+    };
+
+    /*
+        Place a Terminal on the Map.
+    */
+    module.addTerminal = function (description, latitude, longitude) {
+        var marker = new google.maps.Marker({
+            position: {
+                lat: latitude,
+                lng: longitude
+            },
+            map: module._map,
+            icon: module._busTerminalImgPath,
+            title: description
+        });
+
+        var contentString = '<div class="bus-info">' +
+                            '    <h2>' + description + '</h2>' +
+                            '</div>';
+
+        var infowindow = new google.maps.InfoWindow({
+            content: contentString,
+        });
+
+        marker.addListener('click', function() {
+            infowindow.open(module._map, marker);
+        });
     };
 
     /*

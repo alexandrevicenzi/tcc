@@ -1,0 +1,24 @@
+[
+    {
+        "fields": {
+            "latitude": "-26.91166740",
+            "is_active": true,
+            "name": "Terminal Proeb",
+            "longitude": "-49.08080850",
+            "details": ""
+        },
+        "model": "core.busterminal",
+        "pk": 1
+    },
+    {
+        "fields": {
+            "latitude": "-26.87138820",
+            "is_active": true,
+            "name": "Terminal Aterro",
+            "longitude": "-49.09508560",
+            "details": ""
+        },
+        "model": "core.busterminal",
+        "pk": 2
+    }
+]
