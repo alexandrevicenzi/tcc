@@ -1,0 +1,62 @@
+{% extends "site/base.html" %}
+
+{% load static %}
+{% load settings_extras %}
+
+{% block content %}
+  <div id="map" class="map"></div>
+{% endblock %}
+
+{% block additional_js %}
+  <script type="text/javascript" src="{% static 'js/map.js' %}"></script>
+  <script type="text/javascript">
+    function locationError(error) {
+        console.warn('GeoLocation error!. Using default location.');
+
+        initMap({
+          coords: {
+            latitude: {% setting "default_latitude" %},
+            longitude: {% setting "default_longitude" %}
+          }
+        }, true);
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(initMap, locationError);
+      } else {
+        locationError();
+      }
+    }
+
+    function initMap(position, fail) {
+      options = {
+        initialLatitude: position.coords.latitude,
+        initialLongitude: position.coords.longitude,
+        isUserLocation: !fail,
+        busImgPath: "{% static 'img/bus.png' %}",
+        busTerminalImgPath: "{% static 'img/bus-terminal.png' %}",
+      };
+
+      map.init(options);
+
+      // Load all Terminals to the Map.
+      $.get('{% url "api_terminal_list" %}', function (data) {
+        $.each(data, function (index) {
+          var terminal = data[index];
+          map.addTerminal(terminal);
+        });
+      });
+
+      // Load all Bus to the Map.
+      $.get('{% url "api_bus_list" %}', function (data) {
+        $.each(data, function (index) {
+          var bus = data[index];
+          map.addBus(bus);
+        });
+      });
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key={% setting 'google_maps_api_key' %}&callback=getLocation"
+          async defer></script>
+{% endblock %}

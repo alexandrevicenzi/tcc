@@ -44,24 +44,24 @@ var map = function (module) {
     /*
         Place a Bus on the Map.
     */
-    module.addBus = function (id, description, latitude, longitude) {
+    module.addBus = function (data) {
+        var description = data.bus_code + ' - ' + data.route_name;
         var marker = new google.maps.Marker({
             position: {
-                lat: latitude,
-                lng: longitude
+                lat: data.gps_data.latitude,
+                lng: data.gps_data.longitude
             },
             map: module._map,
             icon: module._busImgPath,
             title: description
         });
 
-        // TODO:
         var contentString = '<div class="bus-info">' +
                             '    <h2>' + description + '</h2>' +
-                            '    <label>Terminal</label><span>2-TERMINAL FONTE</span><br>' +
-                            '    <label>Linha</label><span>11 - TRONCAL - VIA 2 DE SETEMBRO</span><br>' +
-                            '    <label>Sentido</label><span>Terminal Aterro/ Terminal Fonte</span><br>' +
-                            '    <label class="last">Última atualização</label><span>20:30</span><br>' +
+                            '    <label>Linha</label><span>' + data.route_name + '</span><br>' +
+                            '    <label>Terminal</label><span>' + data.from_terminal + ' / ' + data.to_terminal + '</span><br>' +
+                            '    <label>Velocidade média</label><span>' + data.gps_data.velocity + ' km/H</span><br>' +
+                            '    <label class="last">Última atualização</label><span>' + data.gps_data.last_update + '</span><br>' +
                             '</div>';
 
         var infowindow = new google.maps.InfoWindow({
@@ -72,25 +72,25 @@ var map = function (module) {
             infowindow.open(module._map, marker);
         });
 
-        module._busList[id] = marker;
+        module._busList[data.device_id] = marker;
     };
 
     /*
         Place a Terminal on the Map.
     */
-    module.addTerminal = function (description, latitude, longitude) {
+    module.addTerminal = function (data) {
         var marker = new google.maps.Marker({
             position: {
-                lat: latitude,
-                lng: longitude
+                lat: data.latitude,
+                lng: data.longitude
             },
             map: module._map,
             icon: module._busTerminalImgPath,
-            title: description
+            title: data.name
         });
 
         var contentString = '<div class="bus-info">' +
-                            '    <h2>' + description + '</h2>' +
+                            '    <h2>' + data.name + '</h2>' +
                             '</div>';
 
         var infowindow = new google.maps.InfoWindow({
@@ -117,13 +117,13 @@ var map = function (module) {
     /*
         Update Bus location on Map.
     */
-    module.updateBusLocation = function (id, latitude, longitude) {
-        var bus = module._busList[id];
+    module.updateBusLocation = function (data) {
+        var bus = module._busList[data.device_id];
 
         if (bus) {
             bus.setPosition({
-                lat: latitude,
-                lng: longitude
+                lat: data.gps_data.latitude,
+                lng: data.gps_data.longitude
             });
         }
     };

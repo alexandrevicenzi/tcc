@@ -15,18 +15,11 @@ def index(request):
 @token_auth
 @json_response
 def get_bus_list(request):
-    return list(Bus.objects.filter(is_active=True))
+    return [bus.to_dict() for bus in list(Bus.objects.filter(is_active=True)) if bus.get_gps_data_cached()]
 
 
 @allow_methods(['GET'])
 @token_auth
 @json_response
 def get_terminal_list(request):
-    def to_dict(obj):
-        return {
-            'name': obj.name,
-            'latitude': float(obj.latitude),
-            'longitude': float(obj.longitude),
-        }
-
-    return [to_dict(t) for t in list(BusTerminal.objects.filter(is_active=True))]
+    return [t.to_dict() for t in list(BusTerminal.objects.filter(is_active=True))]

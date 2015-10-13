@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
+
 
 class GpsData(object):
 
@@ -8,23 +10,41 @@ class GpsData(object):
 
     @property
     def latitude(self):
-        pass
+        # TODO
+        return -26.9115028
 
     @property
     def longitude(self):
-        pass
+        # TODO
+        return -49.081016
 
     @property
     def last_update(self):
-        pass
+        # TODO
+        return datetime.now()
 
     @property
     def velocity(self):
-        pass
+        # TODO:
+        return 60.0
+
+    def to_dict(self):
+        if self.last_update.date() < datetime.now().date():
+            last_update = self.last_update.strftime('%d/%m/%Y')
+        else:
+            last_update = self.last_update.strftime('%H:%M')
+
+        return {
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'last_update': last_update,
+            'velocity': self.velocity,
+        }
 
 
 def get_gps_data(device_id):
-    return None
+    # TODO
+    return GpsData()
 
 
 def distance_from(latitude1, longitude1, latitude2, longitude2):
@@ -34,4 +54,5 @@ def distance_from(latitude1, longitude1, latitude2, longitude2):
 
         Haversine formula (https://en.wikipedia.org/wiki/Haversine_formula)
     '''
+    # TODO
     return 0
