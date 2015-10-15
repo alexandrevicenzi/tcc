@@ -23,3 +23,17 @@ def get_bus_list(request):
 @json_response
 def get_terminal_list(request):
     return [t.to_dict() for t in list(BusTerminal.objects.filter(is_active=True))]
+
+
+@allow_methods(['GET'])
+@token_auth
+@json_response
+def get_nearest_terminal(request):
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
+
+    if lat and lon:
+        nearest = BusTerminal.get_nearest_terminal(float(lat), float(lon))
+        return nearest.to_dict() if nearest else {}
+
+    return {}

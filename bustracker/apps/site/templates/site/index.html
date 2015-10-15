@@ -7,7 +7,7 @@
   <div>
     <ul id="nav-terminal" class="nav nav-tabs nav-justified">
       {% for t in terminal_list %}
-      <li role="presentation"><a href="#"><i class="glyphicon glyphicon-map-marker"></i> <strong>{{ t.name }}</strong></a></li>
+      <li role="presentation" id="tab-{{ t.id }}"><a href="#"><i class="glyphicon glyphicon-map-marker"></i> <strong>{{ t.name }}</strong></a></li>
       {% endfor %}
     </ul>
   </div>
@@ -19,5 +19,31 @@
       $('#nav-terminal li').removeClass('active');
       $(this).addClass('active');
     });
+
+    function chooseTab(position) {
+        var lat = position.coords.latitude,
+            lon = position.coords.longitude;
+
+        // Try to show the nearest terminal tab.
+        $.get('{% url "api_nearest_terminal" %}?lat=' + lat + '&lon=' + lon, function (data) {
+          $('#tab-' + data.id).tab('show');
+        });
+    }
+
+    function defaultTab() {
+      $('#nav-terminal li:first').tab('show');
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(chooseTab, defaultTab);
+      } else {
+        defaultTab();
+      }
+    }
+
+    $(document).ready(function () {
+      getLocation();
+    })
   </script>
 {% endblock %}

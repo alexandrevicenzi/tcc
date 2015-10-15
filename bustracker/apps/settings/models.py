@@ -25,6 +25,9 @@ class SiteSetting(models.Model):
                                   choices=SETTING_TYPES,
                                   default=STR)
 
+    def __unicode__(self):
+        return self.key
+
     def cast(self):
         if self.value_type == SiteSetting.BOOL:
             return bool(self.value)
