@@ -7,6 +7,7 @@ import paho.mqtt.client as mqtt
 from collections import namedtuple
 from pymongo import MongoClient
 
+from . import nmea
 
 Auth = namedtuple('Auth', ['user', 'pwd'])
 
@@ -15,7 +16,7 @@ MQTT_PORT = 1883
 MQTT_AUTH = Auth('guest', 'guest')
 MQTT_TIMEOUT = 120
 
-MONGO_ADDRESS = MQTT_ADDRESS
+MONGO_ADDRESS = 'tcc.alexandrevicenzi.com'
 MONGO_PORT = 27017
 
 
@@ -67,10 +68,16 @@ class Morudall(mqtt.Client):
                 dt = dateutil.parser.parse(payload['ts'])
                 nmea_sentece = payload['data']
 
+                try:
+                    nmea_parsed = nmea.Parser().parse(nmea_sentece)
+                except:
+                    nmea_parsed = None
+
                 data = {
                     'device': device_id,
                     'time': dt,
-                    'gps': nmea_sentece
+                    'raw_gps': nmea_sentece,
+                    'gps_data': nmea_parsed
                 }
 
                 self._save_gps_data(data)
