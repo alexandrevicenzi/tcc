@@ -3,7 +3,41 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from utils.ap import get_ap_data
 from utils.gps import get_gps_data, distance_from
+
+
+class AccessPoint(models.Model):
+    is_active = models.BooleanField(verbose_name=_(u'Ativo'), default=True)
+    ap_model = models.CharField(verbose_name=_(u'Modelo'), max_length=250, blank=True, null=True)
+    bssid = models.CharField(verbose_name=_(u'BSSID'), max_length=17)
+    essid = models.CharField(verbose_name=_(u'ESSID'), max_length=17, blank=True, null=True)
+    ssid = models.CharField(verbose_name=_(u'SSID'), max_length=17)
+    password = models.CharField(verbose_name=_(u'Senha'), max_length=250)
+    frequency = models.FloatField(verbose_name=_(u'Frequência'), help_text=_('Em GHz. Ex: "2.462"'))
+    tx_power = models.IntegerField(verbose_name=_(u'TX Power'), blank=True, null=True, help_text=_('Em dBm. Ex: "15"'))
+    ieee_802_11_a = models.BooleanField(verbose_name=_(u'802.11a'), default=True)
+    ieee_802_11_b = models.BooleanField(verbose_name=_(u'802.11b'), default=True)
+    ieee_802_11_g = models.BooleanField(verbose_name=_(u'802.11g'), default=True)
+    ieee_802_11_n = models.BooleanField(verbose_name=_(u'802.11n'), default=True)
+
+    def __unicode__(self):
+        return '%s - %s' % (self.ssid, self.bssid)
+
+    def get_frequency(self, mode='ghz'):
+        conversions = {
+            'hz': lambda x: x * 1e+9,
+            'khz': lambda x: x * 1000000,
+            'mhz': lambda x: x * 1000,
+            'ghz': lambda x: x,
+        }
+
+        convert = conversions.get(mode.lower())
+
+        if convert:
+            return convert(self.frequency)
+
+        raise ValueError('Invalid mode: %s' % mode)
 
 
 class BusTerminal(models.Model):
@@ -12,6 +46,7 @@ class BusTerminal(models.Model):
     details = models.TextField(verbose_name=_(u'Detalhes'), max_length=250, blank=True, null=True)
     latitude = models.DecimalField(verbose_name=_(u'Latitude'), max_digits=12, decimal_places=8)
     longitude = models.DecimalField(verbose_name=_(u'Longitude'), max_digits=12, decimal_places=8)
+    aps = models.ManyToManyField(AccessPoint, related_name='ap_set', verbose_name=_(u'APs do Terminal (+)'), blank=True)
 
     def __unicode__(self):
         return self.name
@@ -68,6 +103,7 @@ class Bus(models.Model):
             'name': self.name,
             'device_id': self.device_id,
             'gps_data': self.get_gps_data_cached().to_dict(),
+            'ap_data': self.get_ap_data_cached().to_dict(),
             'from_terminal': self.route.from_terminal.name,
             'to_terminal': self.route.to_terminal.name,
             'bus_code': self.route.code,
@@ -75,10 +111,25 @@ class Bus(models.Model):
         }
 
     def get_gps_data(self):
-        return get_gps_data(self.device_id)
+        data = get_gps_data(self.device_id)
+        # update cached data.
+        self._cached_gps_data = data
+        return data
 
     def get_gps_data_cached(self):
-        if not hasattr(self, '_gps_data'):
-            self._gps_data = self.get_gps_data()
+        if not hasattr(self, '_cached_gps_data'):
+            self._cached_gps_data = self.get_gps_data()
 
-        return self._gps_data
+        return self._cached_gps_data
+
+    def get_ap_data(self):
+        data = get_ap_data(self.device_id)
+        # update cached data.
+        self._cached_ap_data = data
+        return data
+
+    def get_ap_data_cached(self):
+        if not hasattr(self, '_cached_ap_data'):
+            self._cached_ap_data = self.get_ap_data()
+
+        return self._cached_ap_data
