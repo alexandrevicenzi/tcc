@@ -17,6 +17,7 @@
 
     <!-- Bootstrap core CSS -->
     <link href="{% static 'vendor/bootstrap/css/bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/font-awesome-4.4.0/css/font-awesome.css' %}" rel="stylesheet">
     <link href="{% static 'styles/styles.css' %}" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -35,14 +36,14 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{% url 'site_index' %}">BusTracker</a>
+          <a class="navbar-brand" href="{% url 'site_index' %}"><i class="fa fa-bus"></i> BusTracker</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="{% active 'site_index' %}"><a href="{% url 'site_index' %}">Home</a></li>
-            <li class="{% active 'site_bus_map' %}"><a href="{% url 'site_bus_map' %}">Mapa</a></li>
-            <li><a href="#about">Sobre</a></li>
-            <li><a href="#contact">Contato</a></li>
+            <li class="{% active 'site_index' %}"><a href="{% url 'site_index' %}"><i class="fa fa-home"></i> Home</a></li>
+            <li class="{% active 'site_bus_map' %}"><a href="{% url 'site_bus_map' %}"><i class="fa fa-map-o"></i> Mapa</a></li>
+            <li><a href="#about"><i class="fa fa-question-circle"></i> Sobre</a></li>
+            <li><a href="#contact"><i class="fa fa-at"></i> Contato</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -54,6 +55,7 @@
 
     <script src="{% static 'vendor/jquery/jquery.js' %}"></script>
     <script src="{% static 'vendor/bootstrap/js/bootstrap.js' %}"></script>
+    <script src="{% static 'vendor/knockout/knockout-3.3.0.js' %}"></script>
     <script type="text/javascript">
       $.ajaxSetup({
         beforeSend: function(xhr, settings) {

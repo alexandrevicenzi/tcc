@@ -13,7 +13,14 @@ def json_response(view):
         value = view(request, *args, **kwargs)
         if isinstance(value, HttpResponse):
             return value
-        return HttpResponse(json.dumps(value), content_type="application/json")
+        try:
+            return HttpResponse(json.dumps(value), content_type="application/json")
+        except Exception as e:
+            error = {
+                'message': str(e),
+                'type': e.__class__.__name__
+            }
+            return HttpResponse(json.dumps(error), status=500, content_type="application/json")
     return _wrap
 
 

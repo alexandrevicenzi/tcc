@@ -32,3 +32,35 @@ html, body {
 .bus-info .last {
     margin-top: 10px;
 }
+
+.bus-panel .semi-huge {
+    font-size: 24px;
+}
+
+.bus-panel .huge {
+    font-size: 32px;
+}
+
+.tab-content {
+    padding-top: 8px;
+}
+
+.bus-panel {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.bus-panel .col-md-2,
+.bus-panel .col-md-3,
+.bus-panel .col-md-5 {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.tab-loading {
+    padding-top: 25px;
+}
+
+.upper {
+    text-transform: uppercase;
+}

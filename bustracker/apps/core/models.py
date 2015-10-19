@@ -3,8 +3,8 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from utils.ap import get_ap_data
-from utils.gps import get_gps_data, distance_from
+from utils.ap import get_ap_data, get_distance_from_ap
+from utils.gps import get_gps_data, distance_from, time_to
 
 
 class AccessPoint(models.Model):
@@ -133,3 +133,18 @@ class Bus(models.Model):
             self._cached_ap_data = self.get_ap_data()
 
         return self._cached_ap_data
+
+    def get_estimated_time_to(self, latitude, longitude):
+        '''
+            Returns the estimated time to the given latitude and longitude
+            based on the position of the bus.
+        '''
+        gps_data = self.get_gps_data_cached()
+
+        if not gps_data:
+            return None
+
+        bus_lat, bus_lon = gps_data.latitude, gps_data.longitude
+        distance = distance_from(bus_lat, bus_lon, latitude, longitude)
+
+        return time_to(distance, gps_data.velocity)
