@@ -57,7 +57,7 @@ html, body {
     padding-right: 2px;
 }
 
-.tab-loading {
+.tab-loading, .map .loading {
     padding-top: 25px;
 }
 

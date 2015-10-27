@@ -1,7 +1,15 @@
+/*
+    This module takes control of responsiveVoice.
+
+    This module add a queue for messages.
+    You can play many messages you want, and
+    all will be played.
+*/
+
 
 var speaker = function (module) {
     /*
-        Init the Map.
+        Init the Speaker.
         Call this before everything.
     */
     module.init = function (options) {
