@@ -85,9 +85,9 @@
           var eventSource = new EventSource('{% url "bus_near_stream" %}');
 
           eventSource.addEventListener('near', function(e) {
-            console.log(e);
-            //speaker.play("Atenção! O 10 está chegando!");
-            //speaker.play("Atenção! O 11 está chegando!");
+            $.get('/api/bus/' + e.data, function (data) {
+              speaker.play('Atenção! O ' + data.bus_code + ' está chegando!');
+            });
           });
         } else {
           console.warn('SSE not supported!');

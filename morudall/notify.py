@@ -31,29 +31,7 @@ class Notify:
         '''
         self.connection.publish(channel, json.dumps([event, data]))
 
-    def subscribe(self, channel):
-        '''
-            Subscribe to a channel.
-
-        Arguments:
-          channel   the name of the channel to send event to.
-        '''
-        self.pubsub.subscribe(channel)
-
-    def listen(self):
-        '''
-        Receive an event.
-
-        Returns:
-          event     the name of the event to be sent.
-          data      data (dict) to be sent along with the event.
-        '''
-        for message in self.pubsub.listen():
-            if message['type'] == 'message':
-                event, data = json.loads(message['data'].decode('utf-8'))
-                yield event, data
-
 
 if __name__ == '__main__':
     notify = Notify()
-    notify.send('near', {'device': 'device_id'}, 'bus_near')
+    notify.send('near', '123456', 'bus_near')
