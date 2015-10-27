@@ -56,11 +56,30 @@
     <script src="{% static 'vendor/jquery/jquery.js' %}"></script>
     <script src="{% static 'vendor/bootstrap/js/bootstrap.js' %}"></script>
     <script src="{% static 'vendor/knockout/knockout-3.3.0.js' %}"></script>
+    <script src='https://code.responsivevoice.org/responsivevoice.js'></script>
+    <script src="{% static 'js/voice-manager.js' %}"></script>
     <script type="text/javascript">
       $.ajaxSetup({
         beforeSend: function(xhr, settings) {
           xhr.setRequestHeader('Authorization', 'Token {% setting "api_token" %}');
         }
+      });
+
+      $(document).ready(function () {
+        speaker.init();
+
+        if (window.EventSource) {
+          var eventSource = new EventSource('{% url "bus_near_stream" %}');
+
+          eventSource.addEventListener('near', function(e) {
+            console.log(e);
+            //speaker.play("Atenção! O 10 está chegando!");
+            //speaker.play("Atenção! O 11 está chegando!");
+          });
+        } else {
+          console.warn('SSE not supported!');
+        }
+
       });
     </script>
     {% block additional_js %}{% endblock %}

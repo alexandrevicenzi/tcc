@@ -63,7 +63,7 @@ def get_terminal_bus_list(request, terminal_id):
 
 
 @allow_methods(['GET'])
-#@token_auth
+@token_auth
 @json_response
 def get_bus_time_list(request, terminal_id):
     '''

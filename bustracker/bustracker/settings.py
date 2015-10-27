@@ -85,6 +85,15 @@ DATABASES = {
     }
 }
 
+# SSE
+# https://github.com/gfronza/django-sse-wrapper
+SSE_BACKEND_CLASS = 'sse_wrapper.backends.redis_based.RedisBasedBackend'
+SSE_BACKEND_CONNECTION_SETTINGS = {
+    'host': 'localhost',
+    'port': 6379,
+    'db': 0,
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
