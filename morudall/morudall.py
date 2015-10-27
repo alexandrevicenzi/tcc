@@ -8,6 +8,7 @@ from collections import namedtuple
 from pymongo import MongoClient
 
 from . import nmea
+from . import notify
 
 Auth = namedtuple('Auth', ['user', 'pwd'])
 
@@ -27,6 +28,7 @@ class Morudall(mqtt.Client):
         self.on_connect = self._on_connect
         self.on_message = self._on_message
         self._debug = debug
+        self._notify = notify.Notify()
 
         uri = 'mongodb://%s:%d/' % (MONGO_ADDRESS, MONGO_PORT)
         mc = MongoClient(uri)
@@ -85,6 +87,8 @@ class Morudall(mqtt.Client):
                 print(str(e))
 
     def _save_ap_data(self, data):
+        self._notify.send('near', data, 'bus_near')
+
         if self._debug:
             print(data)
         else:
