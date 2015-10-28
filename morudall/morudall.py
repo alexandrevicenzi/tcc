@@ -7,8 +7,8 @@ import paho.mqtt.client as mqtt
 from collections import namedtuple
 from pymongo import MongoClient
 
-from . import nmea
-from . import notify
+import nmea
+import notify
 
 Auth = namedtuple('Auth', ['user', 'pwd'])
 
