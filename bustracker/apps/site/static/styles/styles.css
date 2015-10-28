@@ -94,3 +94,15 @@ html, body {
     border: 1px gray solid;
     border-radius: 2%;
 }
+
+.online {
+    color: #3c763d;
+}
+
+.offline {
+    color: #FFCC66;
+}
+
+.error {
+    color: #a94442;
+}

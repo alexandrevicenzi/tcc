@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from utils.ap import get_ap_data, get_distance_from_ap
 from utils.gps import get_gps_data, distance_from, time_to
+from utils.geo import get_geo_code
 
 
 class AccessPoint(models.Model):
@@ -171,3 +172,18 @@ class Bus(models.Model):
 
         d = from_terminal_distance_to_terminal - bus_distance_to_terminal
         return d * 100 / from_terminal_distance_to_terminal
+
+    def get_current_location_info(self):
+        gps_data = self.get_gps_data_cached()
+
+        if not gps_data:
+            return None
+
+        bus_lat, bus_lon = gps_data.latitude, gps_data.longitude
+        return get_geo_code(bus_lat, bus_lon)
+
+    def is_online(self):
+        return True
+
+    def is_moving(self):
+        return True
