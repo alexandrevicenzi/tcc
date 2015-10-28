@@ -1,0 +1,4 @@
+Django==1.8.5
+django-sse-wrapper==0.0.4
+redis==2.10.3
+requests==2.8.1
