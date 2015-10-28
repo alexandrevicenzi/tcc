@@ -21,6 +21,15 @@ MONGO_ADDRESS = 'tcc.alexandrevicenzi.com'
 MONGO_PORT = 27017
 
 
+def signal_quality(db):
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/ms706828(v=vs.85).aspx
+    if db >= -50:
+        return 100
+    if db <= -100:
+        return 0
+    return 2 * (db + 100)
+
+
 class Morudall(mqtt.Client):
 
     def __init__(self, debug):
@@ -55,7 +64,8 @@ class Morudall(mqtt.Client):
                         'ssid': ssid,
                         'rssi': rssi,
                         'authmode': authmode,
-                        'channel': channel
+                        'channel': channel,
+                        'signal_quality': signal_quality(rssi)
                     }
                 }
 
@@ -71,8 +81,9 @@ class Morudall(mqtt.Client):
                 nmea_sentece = payload['data']
 
                 try:
-                    nmea_parsed = nmea.Parser().parse(nmea_sentece)
-                except:
+                    nmea_parsed = nmea.Parser().parse(nmea_sentece).to_dict()
+                except Exception as e:
+                    print(str(e))
                     nmea_parsed = None
 
                 data = {
