@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import math
 
 from django import template
 from django.core.urlresolvers import reverse
@@ -15,3 +16,8 @@ def active(context, name, **kwargs):
         return 'active'
 
     return ''
+
+
+@register.filter('ceil')
+def do_ceil(value):
+    return math.ceil(value)

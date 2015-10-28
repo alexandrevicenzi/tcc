@@ -36,6 +36,18 @@ def get_bus(request, device_id):
 @allow_methods(['GET'])
 @token_auth
 @json_response
+def get_bus_by_id(request, bus_id):
+    ''' Return the Bus info. '''
+    try:
+        bus = Bus.objects.get(is_active=True, pk=bus_id)
+        return bus.to_dict()
+    except Bus.DoesNotExist:
+        return {}
+
+
+@allow_methods(['GET'])
+@token_auth
+@json_response
 def get_terminal_list(request):
     ''' Return the complete Terminal list. '''
     return [t.to_dict() for t in list(BusTerminal.objects.filter(is_active=True))]

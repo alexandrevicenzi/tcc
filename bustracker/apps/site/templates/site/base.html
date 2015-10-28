@@ -51,11 +51,8 @@
             <li class="{% active 'site_bus_route' %}">
               <a href="{% url 'site_bus_route' %}"><i class="fa fa-bus"></i> Linha</a>
             </li>
-            <li>
-              <a href="#about"><i class="fa fa-question-circle"></i> Sobre</a>
-            </li>
-            <li>
-              <a href="#contact"><i class="fa fa-at"></i> Contato</a>
+            <li class="{% active 'site_about' %}">
+              <a href="{% url 'site_about' %}"><i class="fa fa-question-circle"></i> Sobre</a>
             </li>
           </ul>
         </div><!--/.nav-collapse -->

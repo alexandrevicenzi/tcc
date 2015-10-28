@@ -2,15 +2,87 @@
 
 {% load static %}
 {% load settings_extras %}
+{% load extra %}
 
 {% block content %}
-  <div id="map" class="map">
-    <div class="loading text-center">
-      <i class="fa fa-cog fa-2x fa-spin"></i>
+  <div class="bus-details">
+    <div  class="form-horizontal">
+      <div class="form-group">
+        <label class="col-md-2 col-md-offset-2 control-label">Escolha seu ônibus</label>
+        <div class="col-md-4">
+          <select class="form-control" id="bus-list">
+            <option>Selecione</option>
+            {% for b in bus_list %}
+            <option value="{{ b.id }}" {% if b.id == bus.id %}selected="selected"{% endif %}>{{ b.route.code }} - {{ b.route.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
     </div>
+    {% if bus %}
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <i class="fa fa-bus huge"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h3 class="upper">{{ bus.route.code }} - {{ bus.route.name }}</h3>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <span class="pull-right upper bold"><i class="fa fa-map-marker"></i> {{ bus.route.from_terminal.name }}</span>
+        </div>
+        <div class="col-md-6">
+          <div class="progress">
+            <div class="progress-bar progress-bar-success" role="progressbar"
+                 aria-valuenow="{{ bus.get_percent_complete|ceil }}" aria-valuemin="0" aria-valuemax="100"
+                 style="width: {{ bus.get_percent_complete|ceil }}%">
+              <i class="fa fa-arrow-right"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <span class="upper bold"><i class="fa fa-map-marker"></i> {{ bus.route.to_terminal.name }}</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <span class="bold s16">Tempo estimado</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <span class="semi-huge">{{ bus.get_estimated_time.minutes|floatformat:"0" }}</span> <small>minutos</small>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <span class="bold s16">Velocidade média</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <span class="semi-huge">{{ bus.get_gps_data.velocity }}</span> <small>Km/H</small>
+        </div>
+      </div>
+    {% endif %}
   </div>
 {% endblock %}
 
 {% block additional_js %}
-
+  <script type="text/javascript">
+    $(document).ready(function () {
+      $('#bus-list').change(function () {
+        location.search = 'id=' + $(this).val();
+      });
+    });
+  </script>
 {% endblock %}

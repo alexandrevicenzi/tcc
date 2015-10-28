@@ -1,10 +1,14 @@
 from django.shortcuts import render
 
-from apps.core.models import BusTerminal
+from apps.core.models import BusTerminal, Bus
 
 
 def index(request):
     return render(request, 'site/index.html', {})
+
+
+def about(request):
+    return render(request, 'site/about.html', {})
 
 
 def bus_terminal(request):
@@ -18,4 +22,14 @@ def bus_map(request):
 
 
 def bus_route(request):
-    return render(request, 'site/bus_route.html', {})
+    bus_id = request.GET.get('id')
+    bus = None
+
+    if bus_id:
+        try:
+            bus = Bus.objects.get(is_active=True, pk=bus_id)
+        except Bus.DoesNotExist:
+            pass
+
+    bus_list = Bus.objects.filter(is_active=True)
+    return render(request, 'site/bus_route.html', {'bus': bus, 'bus_list': bus_list})

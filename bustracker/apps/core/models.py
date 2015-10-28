@@ -134,6 +134,11 @@ class Bus(models.Model):
 
         return self._cached_ap_data
 
+    def get_estimated_time(self):
+        lat = self.route.to_terminal.latitude
+        lon = self.route.to_terminal.longitude
+        return self.get_estimated_time_to(lat, lon)
+
     def get_estimated_time_to(self, latitude, longitude):
         '''
             Returns the estimated time to the given latitude and longitude
@@ -148,3 +153,21 @@ class Bus(models.Model):
         distance = distance_from(bus_lat, bus_lon, latitude, longitude)
 
         return time_to(distance, gps_data.velocity)
+
+    def get_percent_complete(self):
+        gps_data = self.get_gps_data_cached()
+
+        if not gps_data:
+            return 0
+
+        bus_lat, bus_lon = gps_data.latitude, gps_data.longitude
+        from_lat = self.route.from_terminal.latitude
+        from_lon = self.route.from_terminal.longitude
+        to_lat = self.route.to_terminal.latitude
+        to_lon = self.route.to_terminal.longitude
+
+        from_terminal_distance_to_terminal = distance_from(from_lat, from_lon, to_lat, to_lon)
+        bus_distance_to_terminal = distance_from(bus_lat, bus_lon, to_lat, to_lon)
+
+        d = from_terminal_distance_to_terminal - bus_distance_to_terminal
+        return d * 100 / from_terminal_distance_to_terminal
