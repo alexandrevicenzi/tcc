@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
@@ -11,12 +11,30 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+            name='AccessPoint',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('is_active', models.BooleanField(default=True, verbose_name='Ativo')),
+                ('ap_model', models.CharField(max_length=250, null=True, verbose_name='Modelo', blank=True)),
+                ('bssid', models.CharField(max_length=17, verbose_name='BSSID')),
+                ('essid', models.CharField(max_length=17, null=True, verbose_name='ESSID', blank=True)),
+                ('ssid', models.CharField(max_length=17, verbose_name='SSID')),
+                ('password', models.CharField(max_length=250, verbose_name='Senha')),
+                ('frequency', models.FloatField(help_text='Em GHz. Ex: "2.462"', verbose_name='Frequ\xeancia')),
+                ('tx_power', models.IntegerField(help_text='Em dBm. Ex: "15"', null=True, verbose_name='TX Power', blank=True)),
+                ('ieee_802_11_a', models.BooleanField(default=True, verbose_name='802.11a')),
+                ('ieee_802_11_b', models.BooleanField(default=True, verbose_name='802.11b')),
+                ('ieee_802_11_g', models.BooleanField(default=True, verbose_name='802.11g')),
+                ('ieee_802_11_n', models.BooleanField(default=True, verbose_name='802.11n')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Bus',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('is_active', models.BooleanField(default=True, verbose_name='Ativo')),
                 ('name', models.CharField(max_length=100, verbose_name='Nome')),
-                ('details', models.CharField(max_length=250, null=True, verbose_name='Detalhes', blank=True)),
+                ('details', models.TextField(max_length=250, null=True, verbose_name='Detalhes', blank=True)),
                 ('device_id', models.CharField(help_text=b'MAC Address.', max_length=17, verbose_name='ID do Dispositivo')),
             ],
         ),
@@ -26,35 +44,37 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('is_active', models.BooleanField(default=True, verbose_name='Ativo')),
                 ('name', models.CharField(max_length=100, verbose_name='Nome')),
-                ('details', models.CharField(max_length=250, null=True, verbose_name='Detalhes', blank=True)),
+                ('details', models.TextField(max_length=250, null=True, verbose_name='Detalhes', blank=True)),
                 ('code', models.IntegerField(verbose_name='C\xf3digo')),
             ],
         ),
         migrations.CreateModel(
-            name='BusTerminal',
+            name='BusStop',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('is_active', models.BooleanField(default=True, verbose_name='Ativo')),
                 ('name', models.CharField(max_length=100, verbose_name='Nome')),
-                ('details', models.CharField(max_length=250, null=True, verbose_name='Detalhes', blank=True)),
+                ('details', models.TextField(max_length=250, null=True, verbose_name='Detalhes', blank=True)),
                 ('latitude', models.DecimalField(verbose_name='Latitude', max_digits=12, decimal_places=8)),
                 ('longitude', models.DecimalField(verbose_name='Longitude', max_digits=12, decimal_places=8)),
+                ('stop_type', models.CharField(default=b'bus-station', max_length=15, choices=[(b'bus-stop', 'Ponto'), (b'bus-station', 'Terminal'), (b'garage', 'Garagem')])),
+                ('aps', models.ManyToManyField(related_name='ap_set', verbose_name='APs do Terminal (+)', to='core.AccessPoint', blank=True)),
             ],
         ),
         migrations.AddField(
             model_name='busroute',
-            name='from_terminal',
-            field=models.ForeignKey(related_name='from_set', verbose_name='Terminal de Sa\xedda', to='core.BusTerminal'),
+            name='from_stop',
+            field=models.ForeignKey(related_name='from_set', verbose_name='Terminal de Sa\xedda', to='core.BusStop'),
         ),
         migrations.AddField(
             model_name='busroute',
-            name='terminals',
-            field=models.OneToOneField(related_name='route_set', verbose_name='Terminais de Parada', to='core.BusTerminal'),
+            name='stops',
+            field=models.ManyToManyField(related_name='stops_set', verbose_name='Terminais de Parada (+)', to='core.BusStop', blank=True),
         ),
         migrations.AddField(
             model_name='busroute',
-            name='to_terminal',
-            field=models.ForeignKey(related_name='to_set', verbose_name='Terminal de Chegada', to='core.BusTerminal'),
+            name='to_stop',
+            field=models.ForeignKey(related_name='to_set', verbose_name='Terminal de Chegada', to='core.BusStop'),
         ),
         migrations.AddField(
             model_name='bus',

@@ -20,4 +20,6 @@ def active(context, name, **kwargs):
 
 @register.filter('ceil')
 def do_ceil(value):
+    if not value:
+        return 0
     return math.ceil(value)

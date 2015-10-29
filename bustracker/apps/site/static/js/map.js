@@ -45,11 +45,11 @@ var map = function (module) {
         Place a Bus on the Map.
     */
     module.addBus = function (data) {
-        var description = data.bus_code + ' - ' + data.route_name;
+        var description = data.route.code + ' - ' + data.route.name;
         var marker = new google.maps.Marker({
             position: {
-                lat: data.gps_data.latitude,
-                lng: data.gps_data.longitude
+                lat: data.latitude,
+                lng: data.longitude
             },
             map: module._map,
             icon: module._busImgPath,
@@ -58,10 +58,9 @@ var map = function (module) {
 
         var contentString = '<div class="bus-info">' +
                             '    <h2>' + description + '</h2>' +
-                            '    <label>Linha</label><span>' + data.route_name + '</span><br>' +
-                            '    <label>Terminal</label><span>' + data.from_terminal + ' / ' + data.to_terminal + '</span><br>' +
-                            '    <label>Velocidade média</label><span>' + data.gps_data.velocity + ' km/H</span><br>' +
-                            '    <label class="last">Última atualização</label><span>' + data.gps_data.last_update + '</span><br>' +
+                            '    <label>Linha</label><span>' + data.route.name + '</span><br>' +
+                            '    <label>Terminal</label><span>' + data.route.from.name + ' / ' + data.route.to.name + '</span><br>' +
+                            '    <label>Velocidade média</label><span>' + data.velocity + ' km/H</span><br>' +
                             '</div>';
 
         var infowindow = new google.maps.InfoWindow({

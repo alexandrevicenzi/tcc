@@ -36,9 +36,11 @@
               <br>
               Seu ônibus chegará dentro de alguns instantes.
             </div>
-          {% elif not bus.is_moving %}
+          {% elif not bus.is_parked and not bus.is_moving %}
             <div class="alert alert-danger text-center" role="alert">
               <strong>Ônibus parado</strong>
+              <br>
+              Ocorreu algum problema com o ônibus.
             </div>
           {% elif not bus.is_online %}
             <div class="alert alert-warning text-center" role="alert">
@@ -48,7 +50,7 @@
               <br>
               As informações podem estar desatualizadas.
             </div>
-          {% else %}
+          {% elif not bus.is_parked %}
             <div class="alert alert-info text-center" role="alert">
               <strong>Ônibus no terminal</strong>
             </div>
@@ -72,7 +74,9 @@
 
       <div class="row">
         <div class="col-md-12 text-center">
-          <small>{{ bus.get_current_location_info.street_name }} - {{ bus.get_current_location_info.district }}</small>
+          {% with loc_info=bus.current_location_info %}
+          <small>{{ loc_info.street_name }} - {{ loc_info.district }}</small>
+          {% endwith %}
         </div>
       </div>
 
@@ -80,19 +84,19 @@
 
       <div class="row">
         <div class="col-md-3">
-          <span class="pull-right upper bold"><i class="fa fa-map-marker"></i> {{ bus.route.from_terminal.name }}</span>
+          <span class="pull-right upper bold"><i class="fa fa-map-marker"></i> {{ bus.route.from_stop.name }}</span>
         </div>
         <div class="col-md-6">
           <div class="progress">
             <div class="progress-bar progress-bar-success" role="progressbar"
-                 aria-valuenow="{{ bus.get_percent_complete|ceil }}" aria-valuemin="0" aria-valuemax="100"
-                 style="width: {{ bus.get_percent_complete|ceil }}%">
+                 aria-valuenow="{{ bus.percent_complete_of_route|ceil }}" aria-valuemin="0" aria-valuemax="100"
+                 style="width: {{ bus.percent_complete_of_route|ceil }}%">
               <i class="fa fa-arrow-right"></i>
             </div>
           </div>
         </div>
         <div class="col-md-3">
-          <span class="upper bold"><i class="fa fa-map-marker"></i> {{ bus.route.to_terminal.name }}</span>
+          <span class="upper bold"><i class="fa fa-map-marker"></i> {{ bus.route.to_stop.name }}</span>
         </div>
       </div>
 
@@ -104,7 +108,7 @@
 
       <div class="row">
         <div class="col-md-12 text-center">
-          <span class="semi-huge">{{ bus.get_estimated_time.minutes|floatformat:"0" }}</span> <small>minutos</small>
+          <span class="semi-huge">{{ bus.estimated_time.minutes|floatformat:"0" }}</span> <small>minutos</small>
         </div>
       </div>
 
@@ -116,7 +120,7 @@
 
       <div class="row">
         <div class="col-md-12 text-center">
-          <span class="semi-huge">{{ bus.get_gps_data.velocity }}</span> <small>Km/H</small>
+          <span class="semi-huge">{{ bus.avg_velocity }}</span> <small>Km/H</small>
         </div>
       </div>
     {% endif %}

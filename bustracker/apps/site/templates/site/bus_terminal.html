@@ -98,7 +98,7 @@
           self.bus.more45([]);
         }
 
-        $.get('{% url "api_index" %}terminal/' + terminalId + '/bus-time', function (data) {
+        $.get('{% url "api_index" %}bus_stop/' + terminalId + '/bus-time', function (data) {
           var bust_list = $.map(data, function (o) {
             return {
               panelColor: self.getPanelColor(o.time),
@@ -132,7 +132,7 @@
             lon = position.coords.longitude;
 
         // Try to show the nearest terminal tab.
-        $.get('{% url "api_nearest_terminal" %}?lat=' + lat + '&lon=' + lon, function (data) {
+        $.get('{% url "api_nearest_bus_stop" %}?lat=' + lat + '&lon=' + lon, function (data) {
           $('#nav-terminal a[data-id=' + data.id + ']').tab('show');
           busController.reload(data.id);
         });

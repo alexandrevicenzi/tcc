@@ -3,9 +3,10 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from utils.ap import get_ap_data, get_distance_from_ap
-from utils.gps import get_gps_data, distance_from, time_to
 from utils.geo import get_geo_code
+from utils.calc import convert_frequency, distance_from, time_to
+
+from .services import get_last_ap_data, get_last_gps_data
 
 
 class AccessPoint(models.Model):
@@ -26,45 +27,39 @@ class AccessPoint(models.Model):
         return '%s - %s' % (self.ssid, self.bssid)
 
     def get_frequency(self, mode='ghz'):
-        conversions = {
-            'hz': lambda x: x * 1e+9,
-            'khz': lambda x: x * 1000000,
-            'mhz': lambda x: x * 1000,
-            'ghz': lambda x: x,
+        return convert_frequency(self.frequency, mode)
+
+    def to_dict(self):
+        return {
+            'ssid': self.ssid,
+            'bssid': self.bssid,
         }
 
-        convert = conversions.get(mode.lower())
 
-        if convert:
-            return convert(self.frequency)
+class BusStop(models.Model):
 
-        raise ValueError('Invalid mode: %s' % mode)
+    BUS_STOP = 'bus-stop'
+    BUS_STATION = 'bus-station'
+    GARAGE = 'garage'
 
+    STOP_TYPES = (
+        (BUS_STOP, _(u'Ponto')),
+        (BUS_STATION, _(u'Terminal')),
+        (GARAGE, _(u'Garagem')),
+    )
 
-class BusTerminal(models.Model):
     is_active = models.BooleanField(verbose_name=_(u'Ativo'), default=True)
     name = models.CharField(verbose_name=_(u'Nome'), max_length=100)
     details = models.TextField(verbose_name=_(u'Detalhes'), max_length=250, blank=True, null=True)
     latitude = models.DecimalField(verbose_name=_(u'Latitude'), max_digits=12, decimal_places=8)
     longitude = models.DecimalField(verbose_name=_(u'Longitude'), max_digits=12, decimal_places=8)
     aps = models.ManyToManyField(AccessPoint, related_name='ap_set', verbose_name=_(u'APs do Terminal (+)'), blank=True)
+    stop_type = models.CharField(max_length=15,
+                                 choices=STOP_TYPES,
+                                 default=BUS_STATION)
 
     def __unicode__(self):
         return self.name
-
-    @classmethod
-    def get_nearest_terminal(cls, latitude, longitude):
-        def distance(t):
-            distance = distance_from(float(t.latitude), float(t.longitude), latitude, longitude)
-            return distance, t
-
-        # TODO: How we can make this better??
-        terminals = BusTerminal.objects.all()
-
-        if len(terminals) > 0:
-            return sorted(map(distance, terminals), key=lambda t: t[0])[0][1]
-
-        return None
 
     def to_dict(self):
         return {
@@ -72,6 +67,8 @@ class BusTerminal(models.Model):
             'name': self.name,
             'latitude': float(self.latitude),
             'longitude': float(self.longitude),
+            'type': self.stop_type,
+            'aps': [x.to_dict() for x in self.aps.filter(is_active=True)]
         }
 
 
@@ -80,12 +77,22 @@ class BusRoute(models.Model):
     name = models.CharField(verbose_name=_(u'Nome'), max_length=100)
     details = models.TextField(verbose_name=_(u'Detalhes'), max_length=250, blank=True, null=True)
     code = models.IntegerField(verbose_name=_(u'Código'))
-    terminals = models.ManyToManyField(BusTerminal, related_name='route_set', verbose_name=_(u'Terminais de Parada (+)'), blank=True)
-    from_terminal = models.ForeignKey(BusTerminal, related_name='from_set', verbose_name=_(u'Terminal de Saída'))
-    to_terminal = models.ForeignKey(BusTerminal, related_name='to_set', verbose_name=_(u'Terminal de Chegada'))
+    stops = models.ManyToManyField(BusStop, related_name='stops_set', verbose_name=_(u'Terminais de Parada (+)'), blank=True)
+    from_stop = models.ForeignKey(BusStop, related_name='from_set', verbose_name=_(u'Terminal de Saída'))
+    to_stop = models.ForeignKey(BusStop, related_name='to_set', verbose_name=_(u'Terminal de Chegada'))
 
     def __unicode__(self):
         return self.name
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'code': self.code,
+            'from': self.from_stop.to_dict(),
+            'to': self.to_stop.to_dict(),
+            'stops': [x.to_dict() for x in self.stops.filter(is_active=True)]
+        }
 
 
 class Bus(models.Model):
@@ -99,91 +106,116 @@ class Bus(models.Model):
         return self.name
 
     def to_dict(self):
+        lat, lon = self.current_location
         return {
             'id': self.id,
             'name': self.name,
             'device_id': self.device_id,
-            'gps_data': self.get_gps_data_cached().to_dict(),
-            'ap_data': self.get_ap_data_cached().to_dict(),
-            'from_terminal': self.route.from_terminal.name,
-            'to_terminal': self.route.to_terminal.name,
-            'bus_code': self.route.code,
-            'route_name': self.route.name,
+            'route': self.route.to_dict(),
+            'latitude': lat,
+            'longitude': lon,
+            'velocity': self.avg_velocity,
         }
 
-    def get_gps_data(self):
-        data = get_gps_data(self.device_id)
+    @property
+    def gps_data(self):
+        data = get_last_gps_data(self.device_id)
         # update cached data.
         self._cached_gps_data = data
         return data
 
-    def get_gps_data_cached(self):
+    @property
+    def gps_data_cached(self):
         if not hasattr(self, '_cached_gps_data'):
-            self._cached_gps_data = self.get_gps_data()
+            return self.gps_data
 
         return self._cached_gps_data
 
-    def get_ap_data(self):
-        data = get_ap_data(self.device_id)
+    @property
+    def ap_data(self):
+        data = get_last_ap_data(self.device_id)
         # update cached data.
         self._cached_ap_data = data
         return data
 
-    def get_ap_data_cached(self):
+    @property
+    def ap_data_cached(self):
         if not hasattr(self, '_cached_ap_data'):
-            self._cached_ap_data = self.get_ap_data()
+            return self.ap_data
 
         return self._cached_ap_data
 
-    def get_estimated_time(self):
-        lat = self.route.to_terminal.latitude
-        lon = self.route.to_terminal.longitude
-        return self.get_estimated_time_to(lat, lon)
+    @property
+    def estimated_time_arrival(self):
+        '''
+            Returns the estimated time to the arrival latitude and longitude
+            based on the position of the bus.
+        '''
+        lat = self.route.to_stop.latitude
+        lon = self.route.to_stop.longitude
+        return self.estimated_time_to(lat, lon)
 
-    def get_estimated_time_to(self, latitude, longitude):
+    def estimated_time_to(self, latitude, longitude):
         '''
             Returns the estimated time to the given latitude and longitude
             based on the position of the bus.
         '''
-        gps_data = self.get_gps_data_cached()
-
-        if not gps_data:
+        if not self.gps_data_cached:
             return None
 
-        bus_lat, bus_lon = gps_data.latitude, gps_data.longitude
+        bus_lat, bus_lon = self.gps_data_cached.latitude, self.gps_data_cached.longitude
         distance = distance_from(bus_lat, bus_lon, latitude, longitude)
 
-        return time_to(distance, gps_data.velocity)
+        return time_to(distance, self.gps_data_cached.velocity)
 
-    def get_percent_complete(self):
-        gps_data = self.get_gps_data_cached()
+    @property
+    def percent_complete_of_route(self):
+        if not self.gps_data:
+            return 0.0
 
-        if not gps_data:
-            return 0
+        bus_lat = self.gps_data.latitude
+        bus_lon = self.gps_data.longitude
+        from_lat = self.route.from_stop.latitude
+        from_lon = self.route.from_stop.longitude
+        to_lat = self.route.to_stop.latitude
+        to_lon = self.route.to_stop.longitude
 
-        bus_lat, bus_lon = gps_data.latitude, gps_data.longitude
-        from_lat = self.route.from_terminal.latitude
-        from_lon = self.route.from_terminal.longitude
-        to_lat = self.route.to_terminal.latitude
-        to_lon = self.route.to_terminal.longitude
+        from_distance_to = distance_from(from_lat, from_lon, to_lat, to_lon)
+        bus_distance = distance_from(bus_lat, bus_lon, to_lat, to_lon)
 
-        from_terminal_distance_to_terminal = distance_from(from_lat, from_lon, to_lat, to_lon)
-        bus_distance_to_terminal = distance_from(bus_lat, bus_lon, to_lat, to_lon)
+        d = from_distance_to - bus_distance
+        return d * 100 / from_distance_to
 
-        d = from_terminal_distance_to_terminal - bus_distance_to_terminal
-        return d * 100 / from_terminal_distance_to_terminal
-
-    def get_current_location_info(self):
-        gps_data = self.get_gps_data_cached()
+    @property
+    def current_location(self):
+        gps_data = self.gps_data_cached
 
         if not gps_data:
             return None
 
-        bus_lat, bus_lon = gps_data.latitude, gps_data.longitude
+        return gps_data.latitude, gps_data.longitude
+
+    @property
+    def current_location_info(self):
+        bus_lat, bus_lon = self.current_location
+
+        if not bus_lat or bus_lon:
+            return None
+
         return get_geo_code(bus_lat, bus_lon)
 
+    @property
+    def avg_velocity(self):
+        return 60
+
+    @property
     def is_online(self):
         return True
 
+    @property
     def is_moving(self):
         return True
+
+    @property
+    def is_parked(self):
+        return False

@@ -2,8 +2,13 @@
 
 from django.db.models import Q
 
-from apps.core.models import Bus, BusTerminal
+import apps.core.services as core_service
+from apps.core.models import Bus, BusStop
 from utils.rest import json_response, token_auth, allow_methods
+
+
+class Api404(Exception):
+    pass
 
 
 @allow_methods(['GET'])
@@ -18,7 +23,7 @@ def index(request):
 @json_response
 def get_bus_list(request):
     ''' Return the complete Bus list. '''
-    return [bus.to_dict() for bus in list(Bus.objects.filter(is_active=True)) if bus.get_gps_data_cached()]
+    return [bus.to_dict() for bus in list(Bus.objects.filter(is_active=True))]
 
 
 @allow_methods(['GET'])
@@ -30,7 +35,7 @@ def get_bus(request, device_id):
         bus = Bus.objects.get(is_active=True, device_id=device_id)
         return bus.to_dict()
     except Bus.DoesNotExist:
-        return {}
+        raise Api404()
 
 
 @allow_methods(['GET'])
@@ -42,21 +47,21 @@ def get_bus_by_id(request, bus_id):
         bus = Bus.objects.get(is_active=True, pk=bus_id)
         return bus.to_dict()
     except Bus.DoesNotExist:
-        return {}
+        raise Api404()
 
 
 @allow_methods(['GET'])
 @token_auth
 @json_response
-def get_terminal_list(request):
+def get_bus_stop_list(request):
     ''' Return the complete Terminal list. '''
-    return [t.to_dict() for t in list(BusTerminal.objects.filter(is_active=True))]
+    return [t.to_dict() for t in list(BusStop.objects.filter(is_active=True))]
 
 
 @allow_methods(['GET'])
 @token_auth
 @json_response
-def get_nearest_terminal(request):
+def get_nearest_bus_stop(request):
     ''' Return the nearest Terminal
         based on the given latitude and longitude.
     '''
@@ -64,7 +69,7 @@ def get_nearest_terminal(request):
     lon = request.GET.get('lon')
 
     if lat and lon:
-        nearest = BusTerminal.get_nearest_terminal(float(lat), float(lon))
+        nearest = core_service.get_nearest_stop(float(lat), float(lon), 'bus-station')
         return nearest.to_dict() if nearest else {}
 
     return {}
@@ -73,12 +78,12 @@ def get_nearest_terminal(request):
 @allow_methods(['GET'])
 @token_auth
 @json_response
-def get_terminal_bus_list(request, terminal_id):
+def get_bus_stop_bus_list(request, stop_id):
     '''
         Return the Bus list that route pass through or]
         finishes in the given Terminal.
     '''
-    bus_list = Bus.objects.filter(Q(route__to_terminal__pk=terminal_id) | Q(route__terminals__pk=terminal_id))
+    bus_list = Bus.objects.filter(Q(route__to_stop__pk=stop_id) | Q(route__stops__pk=stop_id))
 
     if len(bus_list) > 0:
         return [bus.to_dict() for bus in bus_list]
@@ -89,7 +94,7 @@ def get_terminal_bus_list(request, terminal_id):
 @allow_methods(['GET'])
 @token_auth
 @json_response
-def get_bus_time_list(request, terminal_id):
+def get_bus_time_list(request, stop_id):
     '''
         Return the time off all Bus that route pass through or
         finishes in the given Terminal.
@@ -99,11 +104,11 @@ def get_bus_time_list(request, terminal_id):
             'id': bus.id,
             'code': bus.route.code,
             'name': bus.route.name,
-            'time': int(bus.get_estimated_time_to(lat, lon).minutes)
+            'time': int(bus.estimated_time_to(lat, lon).minutes)
         }
 
-    terminal = BusTerminal.objects.get(pk=terminal_id)
-    bus_list = Bus.objects.filter(Q(route__to_terminal__pk=terminal_id) | Q(route__terminals__pk=terminal_id))
+    terminal = BusStop.objects.get(pk=stop_id)
+    bus_list = Bus.objects.filter(Q(route__to_stop__pk=stop_id) | Q(route__stops__pk=stop_id))
 
     if len(bus_list) > 0:
         lat, lon = terminal.latitude, terminal.longitude

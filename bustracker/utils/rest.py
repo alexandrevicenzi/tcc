@@ -34,7 +34,7 @@ def token_auth(view):
                 try:
                     act = AccessToken.objects.get(access_key=token, is_active=True)
                     user = act.user
-                except AccessToken.DoesNotExist:
+                except:
                     user = None
 
                 if user:

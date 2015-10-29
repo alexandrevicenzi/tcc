@@ -55,6 +55,11 @@
               <a href="{% url 'site_about' %}"><i class="fa fa-question-circle"></i> Sobre</a>
             </li>
           </ul>
+
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="/admin"><i class="fa fa-cogs"></i> Admin</a></li>
+          </ul>
+
         </div><!--/.nav-collapse -->
       </div>
     </nav>
@@ -83,7 +88,7 @@
 
           eventSource.addEventListener('near', function(e) {
             $.get('/api/bus/' + e.data, function (data) {
-              speaker.play('Atenção! O ' + data.bus_code + ' está chegando!');
+              speaker.play('Atenção! O ' + data.route.code + ' está chegando!');
             });
           });
         } else {

@@ -57,7 +57,7 @@ docs/_build/
 target/
 
 venv
-db.sqlite3
+*.sqlite3
 *.bin
 wpa.conf
 *.pdf

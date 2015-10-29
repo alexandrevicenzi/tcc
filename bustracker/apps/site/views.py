@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from apps.core.models import BusTerminal, Bus
+from apps.core.models import BusStop, Bus
 
 
 def index(request):
@@ -13,7 +13,7 @@ def about(request):
 
 def bus_terminal(request):
     return render(request, 'site/bus_terminal.html', {
-        'terminal_list': sorted([t.to_dict() for t in list(BusTerminal.objects.filter(is_active=True))], key=lambda t: t['name'])
+        'terminal_list': sorted([t.to_dict() for t in list(BusStop.objects.filter(is_active=True))], key=lambda t: t['name'])
         })
 
 

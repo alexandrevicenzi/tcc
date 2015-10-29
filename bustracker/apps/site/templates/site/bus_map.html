@@ -45,7 +45,7 @@
       map.init(options);
 
       // Load all Terminals to the Map.
-      $.get('{% url "api_terminal_list" %}', function (data) {
+      $.get('{% url "api_bus_stop_list" %}', function (data) {
         $.each(data, function (index) {
           var terminal = data[index];
           map.addTerminal(terminal);

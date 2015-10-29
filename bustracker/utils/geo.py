@@ -57,7 +57,7 @@ class GeoCode(object):
         }
 
 
-def get_geo_ip_data(ip):
+def get_geo_ip(ip):
     if ip:
         try:
             # For better performance, this must be replaced by MaxMind Database.
