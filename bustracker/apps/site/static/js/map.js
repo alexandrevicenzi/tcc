@@ -37,7 +37,10 @@ var map = function (module) {
 
         module._map = map;
         module._busImgPath = options.busImgPath;
-        module._busTerminalImgPath = options.busTerminalImgPath;
+        module._busStationImgPath = options.busStationImgPath;
+        module._busStopImgPath = options.busStopImgPath;
+        module._busGarageImgPath = options.busGarageImgPath;
+
         module._busList = {};
     };
 
@@ -61,6 +64,7 @@ var map = function (module) {
                             '    <label>Linha</label><span>' + data.route.name + '</span><br>' +
                             '    <label>Terminal</label><span>' + data.route.from.name + ' / ' + data.route.to.name + '</span><br>' +
                             '    <label>Velocidade média</label><span>' + data.velocity + ' km/H</span><br>' +
+                            '    <a href="/bus-route?id=' + data.id + '">Mais Detalhes</a>' +
                             '</div>';
 
         var infowindow = new google.maps.InfoWindow({
@@ -78,18 +82,29 @@ var map = function (module) {
         Place a Terminal on the Map.
     */
     module.addTerminal = function (data) {
+        var icon;
+
+        if (data.type === 'garage') {
+            icon = module._busGarageImgPath;
+        } else if (data.type === 'bus-stop') {
+            icon = module._busStopImgPath;
+        } else {
+            icon = module._busStationImgPath;
+        }
+
         var marker = new google.maps.Marker({
             position: {
                 lat: data.latitude,
                 lng: data.longitude
             },
             map: module._map,
-            icon: module._busTerminalImgPath,
+            icon: icon,
             title: data.name
         });
 
         var contentString = '<div class="bus-info">' +
                             '    <h2>' + data.name + '</h2>' +
+                            '    <p>' + data.details + '</p>' +
                             '</div>';
 
         var infowindow = new google.maps.InfoWindow({

@@ -65,6 +65,7 @@ class BusStop(models.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'details': self.details,
             'latitude': float(self.latitude),
             'longitude': float(self.longitude),
             'type': self.stop_type,
@@ -88,6 +89,7 @@ class BusRoute(models.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'details': self.details,
             'code': self.code,
             'from': self.from_stop.to_dict(),
             'to': self.to_stop.to_dict(),
@@ -110,6 +112,7 @@ class Bus(models.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'details': self.details,
             'device_id': self.device_id,
             'route': self.route.to_dict(),
             'latitude': lat,
@@ -199,7 +202,7 @@ class Bus(models.Model):
     def current_location_info(self):
         bus_lat, bus_lon = self.current_location
 
-        if not bus_lat or bus_lon:
+        if not bus_lat or not bus_lon:
             return None
 
         return get_geo_code(bus_lat, bus_lon)
