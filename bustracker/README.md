@@ -22,6 +22,8 @@ To run local:
 
 `./manage.py runserver 0.0.0.0:8000`
 
+You also need to setup Redis and MongoDB.
+
 ## Release
 
 TODO
