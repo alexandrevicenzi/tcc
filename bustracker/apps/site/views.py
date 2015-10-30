@@ -11,10 +11,11 @@ def about(request):
     return render(request, 'site/about.html', {})
 
 
-def bus_terminal(request):
-    return render(request, 'site/bus_terminal.html', {
-        'terminal_list': sorted([t.to_dict() for t in list(BusStop.objects.filter(is_active=True))], key=lambda t: t['name'])
-        })
+def bus_stations(request):
+    l = list(BusStop.objects.filter(is_active=True, stop_type='bus-station'))
+    return render(request, 'site/bus_stations.html', {
+        'station_list': sorted([t.to_dict() for t in l], key=lambda t: t['name'])
+    })
 
 
 def bus_map(request):

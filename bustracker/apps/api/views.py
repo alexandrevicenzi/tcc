@@ -54,8 +54,16 @@ def get_bus_by_id(request, bus_id):
 @token_auth
 @json_response
 def get_bus_stop_list(request):
-    ''' Return the complete Terminal list. '''
+    ''' Return the complete bus stop list. '''
     return [t.to_dict() for t in list(BusStop.objects.filter(is_active=True))]
+
+
+@allow_methods(['GET'])
+@token_auth
+@json_response
+def get_bus_station_list(request):
+    ''' Return the complete bus station list. '''
+    return [t.to_dict() for t in list(BusStop.objects.filter(is_active=True, stop_type='bus-station'))]
 
 
 @allow_methods(['GET'])
@@ -104,7 +112,7 @@ def get_bus_time_list(request, stop_id):
             'id': bus.id,
             'code': bus.route.code,
             'name': bus.route.name,
-            'time': int(bus.estimated_time_to(lat, lon).minutes)
+            'time': int(bus.estimated_arrival_to(lat, lon).minutes)
         }
 
     terminal = BusStop.objects.get(pk=stop_id)
