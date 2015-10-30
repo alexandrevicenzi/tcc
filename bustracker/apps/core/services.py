@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from utils.calc import distance_from
+from utils.geo import get_geo_ip, get_nearest_destination
 
 
 class GpsData(object):
@@ -87,20 +87,18 @@ class ApData(object):
         }
 
 
-def get_nearest_stop(latitude, longitude, kind=None):
-    def distance(t):
-        distance = distance_from(float(t.latitude), float(t.longitude), latitude, longitude)
-        return distance, t
-
-    # TODO: How we can make this better??
+def get_nearest_stop(latitude, longitude, kinds=None):
     from .models import BusStop
+    # TODO: Flat select is better...
     stops = BusStop.objects.all()
 
-    if kind:
-        stops = stops.filter(stop_type=kind)
+    if kinds:
+        stops = stops.filter(stop_type__in=kinds)
 
     if len(stops) > 0:
-        return sorted(map(distance, stops), key=lambda t: t[0])[0][1]
+        pos_list = [(x.latitude, x.longitude) for x in stops]
+        index, _ = get_nearest_destination((latitude, longitude), pos_list)
+        return stops[index]
 
     return None
 

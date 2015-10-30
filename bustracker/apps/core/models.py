@@ -4,7 +4,6 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from utils.geo import get_geo_code, get_directions
-from utils.calc import convert_frequency
 
 from .services import get_last_ap_data, get_last_gps_data
 
@@ -27,7 +26,25 @@ class AccessPoint(models.Model):
         return '%s - %s' % (self.ssid, self.bssid)
 
     def get_frequency(self, mode='ghz'):
-        return convert_frequency(self.frequency, mode)
+            '''
+            Convert frequency to another.
+
+            Args:
+                mode:       convert to hz, khz, mhz or ghz (default)
+            '''
+            conversions = {
+                'hz': lambda x: x * 1e+9,
+                'khz': lambda x: x * 1000000,
+                'mhz': lambda x: x * 1000,
+                'ghz': lambda x: x,
+            }
+
+            convert = conversions.get(mode.lower())
+
+            if convert:
+                return convert(self.frequency)
+
+            raise ValueError('Invalid mode: %s' % mode)
 
     def to_dict(self):
         return {

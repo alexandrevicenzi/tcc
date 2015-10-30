@@ -77,7 +77,7 @@ def get_nearest_bus_stop(request):
     lon = request.GET.get('lon')
 
     if lat and lon:
-        nearest = core_service.get_nearest_stop(float(lat), float(lon), 'bus-station')
+        nearest = core_service.get_nearest_stop(float(lat), float(lon), ['bus-station'])
         return nearest.to_dict() if nearest else {}
 
     return {}
