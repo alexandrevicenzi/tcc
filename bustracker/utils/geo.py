@@ -78,12 +78,11 @@ class GeoCode(object):
         }
 
 
-class Direction(object):
+class BaseDirection(object):
 
     def __init__(self, data):
-        route = data[0]['legs'][0]
-        self.meters = route['distance']['value']
-        self.seconds = route['duration']['value']
+        self.meters = data['distance']['value']
+        self.seconds = data['duration']['value']
 
     @property
     def minutes(self):
@@ -105,6 +104,18 @@ class Direction(object):
             'hours': self.hours,
             'km': self.km
         }
+
+
+class Direction(BaseDirection):
+    def __init__(self, data):
+        data = data[0]['legs'][0]
+        super(Direction, self).__init__(data)
+
+
+class Distance(BaseDirection):
+
+    def __init__(self, data):
+        super(Distance, self).__init__(data)
 
 
 def get_geo_ip(ip):
@@ -146,7 +157,47 @@ def get_directions(origin_latitude, origin_longitude, destination_latitude, dest
     return None
 
 
+def get_distances(origins, destinations):
+    try:
+        gmaps = googlemaps.Client(key=API_KEY)
+        result = gmaps.distance_matrix(origins, destinations,
+                                       mode='driving', units='metric')
+                                       #mode='transit', units='metric', transit_mode='bus')
+        if result['status'] == 'OK':
+            matrix = {}
+
+            for i, origin in enumerate(origins):
+                for j, destination in enumerate(destinations):
+                    data = result['rows'][i]['elements'][j]
+                    if data['status'] == 'OK':
+                        matrix[(origin, destination)] = Distance(data)
+
+            if matrix:
+                return matrix
+    except Exception as e:
+        print(str(e))
+
+    return None
+
+
+def get_nearest_destination(origin, destinations):
+    origins = [origin]
+    d = get_distances(origins, destinations)
+
+    if d:
+        distance = sorted(d.values(), key=lambda item: item.meters)[0]
+        key = d.keys()[d.values().index(distance)]
+        index = destinations.index(key[1])
+        return index, distance
+
+    return None, None
+
+
 if __name__ == '__main__':
     print(get_geo_ip('8.8.8.8').to_dict())
     print(get_geo_code(-26.9115028, -49.081016).to_dict())
     print(get_directions(-26.9115028, -49.081016, -26.8712873, -49.0956086).to_dict())
+    origins = [(-26.9115028, -49.081016), (-26.92060830, -49.06775870)]
+    destinations = [(-26.8712873, -49.0956086), (-26.96235820, -49.06536180)]
+    print(get_distances(origins, destinations))
+    print(get_nearest_destination((-26.9115028, -49.081016), destinations))
