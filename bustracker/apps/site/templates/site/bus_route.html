@@ -67,12 +67,24 @@
           <span class="bold">Local atual</span>
         </div>
       </div>
-
       <div class="row">
         <div class="col-md-12 text-center">
           {% with loc_info=bus.current_location_info %}
           <small>{{ loc_info.street_name }} - {{ loc_info.district }}</small>
           {% endwith %}
+        </div>
+      </div>
+
+      <br>
+
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <span class="bold">Próxima parada</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <small>{{ bus.next_stop.name }}</small>
         </div>
       </div>
 

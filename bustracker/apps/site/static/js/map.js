@@ -61,9 +61,9 @@ var map = function (module) {
 
         var contentString = '<div class="bus-info">' +
                             '    <h2>' + description + '</h2>' +
+                            '    <label>Número</label><span>' + data.route.code + '</span><br>' +
                             '    <label>Linha</label><span>' + data.route.name + '</span><br>' +
                             '    <label>Terminal</label><span>' + data.route.from.name + ' / ' + data.route.to.name + '</span><br>' +
-                            '    <label>Velocidade média</label><span>' + data.velocity + ' km/H</span><br>' +
                             '    <a href="/bus-route?id=' + data.id + '">Mais Detalhes</a>' +
                             '</div>';
 

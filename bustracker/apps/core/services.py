@@ -95,7 +95,7 @@ def get_nearest_stop(latitude, longitude, kinds=None):
     if kinds:
         stops = stops.filter(stop_type__in=kinds)
 
-    if len(stops) > 0:
+    if stops.count() > 0:
         pos_list = [(x.latitude, x.longitude) for x in stops]
         index, _ = get_nearest_destination((latitude, longitude), pos_list)
         return stops[index]

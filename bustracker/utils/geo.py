@@ -144,6 +144,9 @@ def get_geo_code(latitude, longitude):
 
 
 def get_directions(origin_latitude, origin_longitude, destination_latitude, destination_longitude):
+    '''
+        Get the distance between to points.
+    '''
     try:
         gmaps = googlemaps.Client(key=API_KEY)
         result = gmaps.directions((origin_latitude, origin_longitude), (destination_latitude, destination_longitude),
@@ -158,6 +161,12 @@ def get_directions(origin_latitude, origin_longitude, destination_latitude, dest
 
 
 def get_distances(origins, destinations):
+    '''
+        Get the distances between many points.
+        Returns an interpolated dict, where's the key is
+        origin and destination (interpolated) and the value is
+        the distance between these points.
+    '''
     try:
         gmaps = googlemaps.Client(key=API_KEY)
         result = gmaps.distance_matrix(origins, destinations,
@@ -181,6 +190,13 @@ def get_distances(origins, destinations):
 
 
 def get_nearest_destination(origin, destinations):
+    '''
+        Given the origin, discover who is nearest.
+
+        How it works:
+            - Calculate the distance between origin and all destinations.
+            - Returns the shortest distance to origin.
+    '''
     origins = [origin]
     d = get_distances(origins, destinations)
 

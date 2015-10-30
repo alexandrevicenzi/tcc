@@ -3,7 +3,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from utils.geo import get_geo_code, get_directions
+from utils.geo import get_geo_code, get_directions, get_distances
 
 from .services import get_last_ap_data, get_last_gps_data
 
@@ -77,6 +77,10 @@ class BusStop(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    @property
+    def location(self):
+        return self.latitude, self.longitude
 
     def to_dict(self):
         return {
@@ -188,6 +192,14 @@ class Bus(models.Model):
 
     @property
     def percent_complete_of_route(self):
+        '''
+            Return the amount (%) which has covered.
+
+            How it works:
+                - Get the distance from first stop to the last stop.
+                - Get the distance from bus to the last stop.
+                - Calculate the remaining in %.
+        '''
         if not self.location_available:
             return 0.0
 
@@ -223,6 +235,43 @@ class Bus(models.Model):
             return None
 
         return get_geo_code(*self.current_location)
+
+    @property
+    def next_stop(self):
+        '''
+            Discover who is the next stop.
+
+            How it works:
+                - Calculate Bus distante from last stop.
+                - Calculate all distances between all stops and last stop.
+                - Get the stop that is more far from last stop and the stop distance
+                  is smaller then bus distance from last stop.
+                - If there's none between, return the last stop.
+        '''
+        if not self.location_available:
+            return None
+
+        stops = self.route.stops.all()
+
+        if stops.count() > 0:
+            bus_lat, bus_lon = self.current_location
+            to_lat, to_lon = self.route.to_stop.location
+            bus_distance = get_directions(bus_lat, bus_lon, to_lat, to_lon).meters
+
+            pos_list = [(x.latitude, x.longitude) for x in stops]
+            distances = get_distances([(to_lat, to_lon)], pos_list)
+
+            if distances:
+                d = distances.values()
+                nexts = filter(lambda d: d.meters < bus_distance, d)
+
+                if len(nexts) > 0:
+                    distance = sorted(nexts, key=lambda item: item.meters)[0]
+                    key = distances.keys()[distances.values().index(distance)]
+                    index = pos_list.index(key[1])
+                    return stops[index]
+
+        return self.route.to_stop
 
     @property
     def avg_velocity(self):
