@@ -3,8 +3,8 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from utils.geo import get_geo_code
-from utils.calc import convert_frequency, distance_from, time_to
+from utils.geo import get_geo_code, get_directions
+from utils.calc import convert_frequency
 
 from .services import get_last_ap_data, get_last_gps_data
 
@@ -149,63 +149,63 @@ class Bus(models.Model):
         return self._cached_ap_data
 
     @property
-    def estimated_time_arrival(self):
+    def estimated_arrival(self):
         '''
             Returns the estimated time to the arrival latitude and longitude
             based on the position of the bus.
         '''
         lat = self.route.to_stop.latitude
         lon = self.route.to_stop.longitude
-        return self.estimated_time_to(lat, lon)
+        return self.estimated_arrival_to(lat, lon)
 
-    def estimated_time_to(self, latitude, longitude):
+    def estimated_arrival_to(self, latitude, longitude):
         '''
             Returns the estimated time to the given latitude and longitude
             based on the position of the bus.
         '''
-        if not self.gps_data_cached:
-            return None
+        if not self.location_available:
+            return 0
 
-        bus_lat, bus_lon = self.gps_data_cached.latitude, self.gps_data_cached.longitude
-        distance = distance_from(bus_lat, bus_lon, latitude, longitude)
-
-        return time_to(distance, self.gps_data_cached.velocity)
+        bus_lat, bus_lon = self.current_location
+        return get_directions(bus_lat, bus_lon, latitude, longitude)
 
     @property
     def percent_complete_of_route(self):
-        if not self.gps_data:
+        if not self.location_available:
             return 0.0
 
-        bus_lat = self.gps_data.latitude
-        bus_lon = self.gps_data.longitude
+        bus_lat = self.gps_data_cached.latitude
+        bus_lon = self.gps_data_cached.longitude
         from_lat = self.route.from_stop.latitude
         from_lon = self.route.from_stop.longitude
         to_lat = self.route.to_stop.latitude
         to_lon = self.route.to_stop.longitude
 
-        from_distance_to = distance_from(from_lat, from_lon, to_lat, to_lon)
-        bus_distance = distance_from(bus_lat, bus_lon, to_lat, to_lon)
+        from_distance_to = get_directions(from_lat, from_lon, to_lat, to_lon).meters
+        bus_distance = get_directions(bus_lat, bus_lon, to_lat, to_lon).meters
 
         d = from_distance_to - bus_distance
         return d * 100 / from_distance_to
 
     @property
+    def location_available(self):
+        if self.gps_data:
+            return True
+        return False
+
+    @property
     def current_location(self):
-        gps_data = self.gps_data_cached
+        if not self.location_available:
+            return None, None
 
-        if not gps_data:
-            return None
-
-        return gps_data.latitude, gps_data.longitude
+        return self.gps_data_cached.latitude, self.gps_data_cached.longitude
 
     @property
     def current_location_info(self):
-        bus_lat, bus_lon = self.current_location
-
-        if not bus_lat or not bus_lon:
+        if not self.location_available:
             return None
 
-        return get_geo_code(bus_lat, bus_lon)
+        return get_geo_code(*self.current_location)
 
     @property
     def avg_velocity(self):

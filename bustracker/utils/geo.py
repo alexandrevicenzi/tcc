@@ -6,7 +6,7 @@ import requests
 from math import ceil
 
 try:
-    from bustracker.apps.settings.models import SiteSetting
+    from apps.settings.models import SiteSetting
     API_KEY = SiteSetting.objects.get(key='google_maps_api_key').cast()
 except Exception as e:
     print(str(e))

@@ -99,19 +99,25 @@
       <div class="row">
         <div class="col-md-12">
           <div class="row">
-            <div class="col-md-3 col-md-offset-3 text-center">
+            <div class="col-md-2 col-md-offset-3 text-center">
               <span class="bold s16">Tempo estimado</span>
             </div>
-            <div class="col-md-3 text-center">
+            <div class="col-md-2 text-center">
+              <span class="bold s16">Distância</span>
+            </div>
+            <div class="col-md-2 text-center">
               <span class="bold s16">Velocidade média</span>
             </div>
           </div>
 
           <div class="row">
-            <div class="col-md-3 col-md-offset-3 text-center">
-              <span class="semi-huge">{{ bus.estimated_time_arrival.minutes|floatformat:"0" }}</span> <small>minutos</small>
+            <div class="col-md-2 col-md-offset-3 text-center">
+              <span class="semi-huge">{{ bus.estimated_arrival.minutes|floatformat:"0" }}</span> <small>minutos</small>
             </div>
-            <div class="col-md-3 text-center">
+            <div class="col-md-2 text-center">
+              <span class="semi-huge">{{ bus.estimated_arrival.km }}</span> <small>Km</small>
+            </div>
+            <div class="col-md-2 text-center">
               <span class="semi-huge">{{ bus.avg_velocity }}</span> <small>Km/H</small>
             </div>
           </div>
