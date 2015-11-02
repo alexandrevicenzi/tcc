@@ -15,7 +15,7 @@
 
 import re
 
-from datetime import time
+from datetime import date, time
 
 
 class ParseException(Exception):
@@ -30,12 +30,28 @@ class UTCTimeParser(object):
 
     def __new__(cls, value):
         try:
-            if len(value) > 6:
-                return time(int(value[0:2]), int(value[2:4]), int(value[4:6]), int(value[7:10]))
-            else:
-                return time(int(value[0:2]), int(value[2:4]), int(value[4:6]))
+            h, m, s, _, ms = re.match(r'^(\d{2})(\d{2})(\d{2})(\.(\d+))?$', value).groups()
+            ms = ms or 0
+            return time(int(h), int(m), int(s), int(ms))
         except:
             raise ParseException('Can\'t parse value into UTC Time: %s' % value)
+
+
+class DateParser(object):
+
+    def __new__(cls, value):
+        try:
+            d, m, y = re.match(r'^(\d{2})(\d{2})(\d{2})$', value).groups()
+            y = '20%s' % y
+            return date(int(y), int(m), int(d))
+        except Exception, e:
+            raise ParseException('Can\'t parse value into Date: %s' % value)
+
+
+class SentenceMixin(object):
+
+    def to_dict(self):
+        return {}
 
 
 class Sentence(object):
@@ -71,15 +87,39 @@ class Sentence(object):
 
         return self
 
+    @property
+    def is_valid(self):
+        return False
+
     def to_dict(self):
         d = {key: self.__dict__[key] for key, _, _ in self.fields}
-        d['sentence'] = self.sentence_name
+
+        d.update({
+            'sentence': self.sentence_name,
+            'is_valid': self.is_valid
+        })
+
+        if isinstance(self, SentenceMixin):
+            # Ignore first class, is itself (avoid recursion loop).
+            # Ignore last class, is object.
+            base_classes = [cls for cls in self.__class__.__mro__[1:-1] if issubclass(cls, SentenceMixin)]
+
+            for cls in base_classes:
+                d.update(cls.to_dict(self))
+
         return d
 
 
-class LatLonMixin(object):
+class LatLonMixin(SentenceMixin):
 
     def _convert_lat_lon(self, value):
+        '''
+        Convert Latitude/Longitude NMEA format to
+        Python float degree.
+
+        Args:
+            value: ddmm.mmmm
+        '''
         d, m = re.match(r'^(\d+)(\d\d\.\d+)$', value).groups()
         return float(d) + float(m) / 60
 
@@ -87,28 +127,36 @@ class LatLonMixin(object):
     def latitude_degree(self):
         lat = self._convert_lat_lon(self.latitude)
 
-        if self.ns_indicator == 'N':
-            return +lat
-        elif self.ns_indicator == 'S':
-            return -lat
+        if self.ns_indicator == 'S':
+            return abs(lat) * -1
 
-        return 0.0
+        return abs(lat)
 
     @property
     def longitude_degree(self):
         lon = self._convert_lat_lon(self.longitude)
 
-        if self.ew_indicator == 'E':
-            return +lon
-        elif self.ew_indicator == 'W':
-            return -lon
+        if self.ew_indicator == 'W':
+            return abs(lon) * -1
 
-        return 0.0
+        return abs(lon)
 
     def to_dict(self):
         return {
             'latitude_degree': self.latitude_degree,
             'longitude_degree': self.longitude_degree,
+        }
+
+
+class KnotToKmHMixin(SentenceMixin):
+
+    @property
+    def speed_km_h(self):
+        return self.speed_over_ground * 1.852
+
+    def to_dict(self):
+        return {
+            'speed_km_h': self.speed_km_h,
         }
 
 
@@ -118,9 +166,9 @@ class GGASentence(Sentence, LatLonMixin):
     fields = (
         ('utc_time', 'UTC Time', UTCTimeParser),
         ('latitude', 'Latitude', str),
-        ('ns_indicator', 'N/S Indicator', str),
+        ('ns_indicator', 'N/S Indicator', str.upper),
         ('longitude', 'Longitude', str),
-        ('ew_indicator', 'E/W Indicator', str),
+        ('ew_indicator', 'E/W Indicator', str.upper),
         ('fix_quality', 'Position Fix Indicator', int),
         ('num_satellites', 'Satellites Used', int),
         ('hdop', 'Horizontal Dilution of Precision', float),
@@ -135,10 +183,9 @@ class GGASentence(Sentence, LatLonMixin):
     def __init__(self):
         super(GGASentence, self).__init__()
 
-    def to_dict(self):
-        d = super(GGASentence, self).to_dict()
-        d.update(LatLonMixin.to_dict(self))
-        return d
+    @property
+    def is_valid(self):
+        return self.fix_quality in [1, 2]
 
 
 class GLLSentence(Sentence, LatLonMixin):
@@ -146,21 +193,45 @@ class GLLSentence(Sentence, LatLonMixin):
     sentence_description = 'Geographic Position – Latitude/Longitude'
     fields = (
         ('latitude', 'Latitude', str),
-        ('ns_indicator', 'N/S Indicator', str),
+        ('ns_indicator', 'N/S Indicator', str.upper),
         ('longitude', 'Longitude', str),
-        ('ew_indicator', 'E/W Indicator', str),
+        ('ew_indicator', 'E/W Indicator', str.upper),
         ('utc_time', 'UTC Time', UTCTimeParser),
-        ('status', 'Status', str),
+        ('status', 'Status', str.upper),
         # ('mode', 'Mode', str), NMEA V 3.00
     )
 
     def __init__(self):
         super(GLLSentence, self).__init__()
 
-    def to_dict(self):
-        d = super(GLLSentence, self).to_dict()
-        d.update(LatLonMixin.to_dict(self))
-        return d
+    @property
+    def is_valid(self):
+        return self.status == 'A'
+
+
+class RMCSentence(Sentence, LatLonMixin, KnotToKmHMixin):
+    sentence_name = 'RMC'
+    sentence_description = 'Recommended Minimum Specific GNSS Data'
+    fields = (
+        ('utc_time', 'UTC Time', UTCTimeParser),
+        ('status', 'Status', str.upper),
+        ('latitude', 'Latitude', str),
+        ('ns_indicator', 'N/S Indicator', str.upper),
+        ('longitude', 'Longitude', str),
+        ('ew_indicator', 'E/W Indicator', str.upper),
+        ('speed_over_ground', 'Speed Over Ground (knots)', float),
+        ('course_over_ground', 'Course Over Ground (degrees)', float),
+        ('data', 'Date', DateParser),
+        ('magnetic_variation', 'E/W Indicator', str.upper),
+        # ('mode', 'Mode', str), NMEA V 3.00
+    )
+
+    def __init__(self):
+        super(RMCSentence, self).__init__()
+
+    @property
+    def is_valid(self):
+        return self.status == 'A'
 
 
 class VTGSentence(Sentence):
@@ -178,6 +249,10 @@ class VTGSentence(Sentence):
         # ('mode', 'Mode', str), NMEA V 3.00
     )
 
+    @property
+    def is_valid(self):
+        return True
+
     def __init__(self):
         super(VTGSentence, self).__init__()
 
@@ -186,6 +261,7 @@ class Parser(object):
     parsers = {
         GGASentence.sentence_name: GGASentence,
         GLLSentence.sentence_name: GLLSentence,
+        RMCSentence.sentence_name: RMCSentence,
         VTGSentence.sentence_name: VTGSentence,
     }
 
@@ -216,17 +292,22 @@ class Parser(object):
         return parser.parse(data[4:])
 
 if __name__ == '__main__':
-    sentence = Parser().parse(u'$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47')
+    parser = Parser()
+
+    sentence = parser.parse('$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47')
     print(sentence.to_dict())
 
-    sentence = Parser().parse(u'$GPGGA,184353.07,1929.045,S,02410.506,E,1,04,2.6,100.00,M,-33.9,M,,0000*6D')
+    sentence = parser.parse('$GPGGA,184353.07,1929.045,S,02410.506,E,1,04,2.6,100.00,M,-33.9,M,,0000*6D')
     print(sentence.to_dict())
 
-    sentence = Parser().parse(u'$GPGGA,161229.487,3723.2475,N,12158.3416,W,1,07,1.0,9.0,M, , , ,0000*18')
+    sentence = parser.parse('$GPGGA,161229.487,3723.2475,N,12158.3416,W,1,07,1.0,9.0,M, , , ,0000*18')
     print(sentence.to_dict())
 
-    sentence = Parser().parse(u'$GPGLL,3723.2475,N,12158.3416,W,161229.487,A*41')
+    sentence = parser.parse('$GPGLL,3723.2475,N,12158.3416,W,161229.487,A*41')
     print(sentence.to_dict())
 
-    sentence = Parser().parse(u'$GPVTG,309.62,T, ,M,0.13,N,0.2,K*23')
+    sentence = parser.parse('$GPVTG,309.62,T, ,M,0.13,N,0.2,K*23')
+    print(sentence.to_dict())
+
+    sentence = parser.parse('$GPRMC,161229.487,A,3723.2475,N,12158.3416,W,0.13,309.62,120508,*10')
     print(sentence.to_dict())
