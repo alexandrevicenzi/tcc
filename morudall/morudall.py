@@ -3,8 +3,10 @@
 import dateutil.parser
 import json
 import paho.mqtt.client as mqtt
+import traceback
 
 from collections import namedtuple
+from datetime import time
 from pymongo import MongoClient
 
 import nmea
@@ -28,6 +30,42 @@ def signal_quality(db):
     if db <= -100:
         return 0
     return 2 * (db + 100)
+
+
+def extract_gps_data(data):
+    if data.is_valid:
+        if data.sentence_name == 'GGA' or data.sentence_name == 'GLL':
+            return {
+                'latitude': data.latitude_degree,
+                'longitude': data.longitude_degree,
+                'is_valid': True,
+            }
+        elif data.sentence_name == 'RMC':
+            return {
+                'latitude': data.latitude_degree,
+                'longitude': data.longitude_degree,
+                'velocity': data.speed_km_h,
+                'is_valid': True,
+            }
+        elif data.sentence_name == 'VTG':
+            return {
+                'velocity': data.speed_2,
+                'is_valid': True,
+            }
+
+    return {'is_valid': False}
+
+
+def to_mongo_type(d):
+    def convert(value):
+        if isinstance(value, time):
+            return value.strftime('%H:%M:%S')
+        elif type(value) == dict:
+            return {k: convert(v) for k, v in value.items()}
+        else:
+            return value
+
+    return convert(d)
 
 
 class Morudall(mqtt.Client):
@@ -70,8 +108,8 @@ class Morudall(mqtt.Client):
                 }
 
                 self._save_ap_data(data)
-            except Exception as e:
-                print(str(e))
+            except:
+                traceback.print_exc()
 
         if msg.topic == '/gpslocation':
             try:
@@ -81,21 +119,26 @@ class Morudall(mqtt.Client):
                 nmea_sentece = payload['data']
 
                 try:
-                    nmea_parsed = nmea.Parser().parse(nmea_sentece).to_dict()
-                except Exception as e:
-                    print(str(e))
-                    nmea_parsed = None
+                    sentence = nmea.Parser().parse(nmea_sentece)
+                    extra = extract_gps_data(sentence)
+                    gps_data = sentence.to_dict()
+                except:
+                    traceback.print_exc()
+                    gps_data = None
+                    extra = {}
 
                 data = {
                     'device': device_id,
                     'time': dt,
                     'raw_gps': nmea_sentece,
-                    'gps_data': nmea_parsed
+                    'gps_data': gps_data
                 }
 
+                data.update(extra)
+
                 self._save_gps_data(data)
-            except Exception as e:
-                print(str(e))
+            except:
+                traceback.print_exc()
 
     def _save_ap_data(self, data):
         self._notify.send('near', data['device_id'], 'bus_near')
@@ -103,13 +146,13 @@ class Morudall(mqtt.Client):
         if self._debug:
             print(data)
         else:
-            return self._db.ap_data.insert_one(data).inserted_id
+            return self._db.ap_data.insert_one(to_mongo_type(data)).inserted_id
 
     def _save_gps_data(self, data):
         if self._debug:
             print(data)
         else:
-            return self._db.gps_data.insert_one(data).inserted_id
+            return self._db.gps_data.insert_one(to_mongo_type(data)).inserted_id
 
     def connect(self):
         self.username_pw_set(MQTT_AUTH.user, MQTT_AUTH.pwd)

@@ -33,7 +33,7 @@ class UTCTimeParser(object):
             h, m, s, _, ms = re.match(r'^(\d{2})(\d{2})(\d{2})(\.(\d+))?$', value).groups()
             ms = ms or 0
             return time(int(h), int(m), int(s), int(ms))
-        except:
+        except Exception as e:
             raise ParseException('Can\'t parse value into UTC Time: %s' % value)
 
 
@@ -44,7 +44,7 @@ class DateParser(object):
             d, m, y = re.match(r'^(\d{2})(\d{2})(\d{2})$', value).groups()
             y = '20%s' % y
             return date(int(y), int(m), int(d))
-        except Exception, e:
+        except Exception as e:
             raise ParseException('Can\'t parse value into Date: %s' % value)
 
 
@@ -55,7 +55,7 @@ class SentenceMixin(object):
 
 
 class Sentence(object):
-    sentence = 'Unknown'
+    sentence_name = 'Unknown'
     sentence_description = 'Unknown Sentence'
     fields = ()
 
@@ -64,7 +64,7 @@ class Sentence(object):
         self._last = self._fields_count - 1
 
     def parse(self, data):
-        raw_fields = data.split(',')
+        raw_fields = str(data).split(',')
 
         if len(raw_fields) != self._fields_count:
             raise ParseException('Field count mismatch. Expected %d fields, but found %d.' % (self._fields_count, len(raw_fields)))
