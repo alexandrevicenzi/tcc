@@ -103,6 +103,7 @@ on_wifi(wifi.STA_GOTIP, function ()
 
                 if sentence == "GPGLL" or
                    sentence == "GPGGA" or
+                   sentence == "GPRMC" or
                    sentence == "GPVTG"
                 then
                     --gps_off()
