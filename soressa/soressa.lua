@@ -2,6 +2,7 @@ local led = require "led"
 local time = require "time"
 
 local mq
+local notify = false
 local DEVICE_ID = wifi.sta.getmac()
 local on_wifi = wifi.sta.eventMonReg
 local void = function (...) end
@@ -19,7 +20,6 @@ end
 local function stop_events()
     gps_off()
     uart.on("data")
-    tmr.stop(1)
     tmr.stop(3)
     if mq then mq:close() end
 end
@@ -30,7 +30,6 @@ local function wifi_err(...)
     led.stop_blink()
     led.off(led.WIFI)
     led.off(led.MQTT)
-    led.off(led.GPS)
     led.on(led.ERROR)
 
     tmr.alarm(2, 5000, 0, function ()
@@ -77,7 +76,10 @@ time.setup()
 
 mq = mqtt.Client("soressa", 120, "guest", "guest")
 mq:lwt("/lwt", "offline", 0, 0)
-mq:on("offline", function () led.off(led.MQTT) end)
+mq:on("offline", function ()
+    led.off(led.MQTT)
+    gps_off()
+end)
 
 on_wifi(wifi.STA_WRONGPWD, wifi_err)
 on_wifi(wifi.STA_APNOTFOUND, wifi_err)
@@ -89,6 +91,7 @@ on_wifi(wifi.STA_GOTIP, function ()
     led.off(led.ERROR)
     led.stop_blink()
     led.on(led.WIFI)
+    notify = true
 
     mq:connect("tcc.alexandrevicenzi.com", 1883, 0, function ()
         print("MQTT connected.")
@@ -108,10 +111,10 @@ on_wifi(wifi.STA_GOTIP, function ()
             end
         end, 0)
 
-        tmr.alarm(1, 30000, 1, function ()
-            tmr.wdclr()
+        if notify then
+            notify = false
             wifi.sta.getap(1, scan_ap)
-        end)
+        end
 
         tmr.alarm(3, 30000, 0, function ()
             tmr.wdclr()
