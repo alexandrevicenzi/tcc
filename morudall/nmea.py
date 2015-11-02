@@ -13,6 +13,8 @@
 # http://www.tronico.fi/OH6NT/docs/NMEA0183.pdf
 #
 
+import re
+
 from datetime import time
 
 
@@ -75,14 +77,49 @@ class Sentence(object):
         return d
 
 
-class GGASentence(Sentence):
+class LatLonMixin(object):
+
+    def _convert_lat_lon(self, value):
+        d, m = re.match(r'^(\d+)(\d\d\.\d+)$', value).groups()
+        return float(d) + float(m) / 60
+
+    @property
+    def latitude_degree(self):
+        lat = self._convert_lat_lon(self.latitude)
+
+        if self.ns_indicator == 'N':
+            return +lat
+        elif self.ns_indicator == 'S':
+            return -lat
+
+        return 0.0
+
+    @property
+    def longitude_degree(self):
+        lon = self._convert_lat_lon(self.longitude)
+
+        if self.ew_indicator == 'E':
+            return +lon
+        elif self.ew_indicator == 'W':
+            return -lon
+
+        return 0.0
+
+    def to_dict(self):
+        return {
+            'latitude_degree': self.latitude_degree,
+            'longitude_degree': self.longitude_degree,
+        }
+
+
+class GGASentence(Sentence, LatLonMixin):
     sentence_name = 'GGA'
     sentence_description = 'Global Positioning System Fix Data'
     fields = (
         ('utc_time', 'UTC Time', UTCTimeParser),
-        ('latitude', 'Latitude', float),
+        ('latitude', 'Latitude', str),
         ('ns_indicator', 'N/S Indicator', str),
-        ('longitude', 'Longitude', float),
+        ('longitude', 'Longitude', str),
         ('ew_indicator', 'E/W Indicator', str),
         ('fix_quality', 'Position Fix Indicator', int),
         ('num_satellites', 'Satellites Used', int),
@@ -98,14 +135,19 @@ class GGASentence(Sentence):
     def __init__(self):
         super(GGASentence, self).__init__()
 
+    def to_dict(self):
+        d = super(GGASentence, self).to_dict()
+        d.update(LatLonMixin.to_dict(self))
+        return d
 
-class GLLSentence(Sentence):
+
+class GLLSentence(Sentence, LatLonMixin):
     sentence_name = 'GLL'
     sentence_description = 'Geographic Position – Latitude/Longitude'
     fields = (
-        ('latitude', 'Latitude', float),
+        ('latitude', 'Latitude', str),
         ('ns_indicator', 'N/S Indicator', str),
-        ('longitude', 'Longitude', float),
+        ('longitude', 'Longitude', str),
         ('ew_indicator', 'E/W Indicator', str),
         ('utc_time', 'UTC Time', UTCTimeParser),
         ('status', 'Status', str),
@@ -114,6 +156,11 @@ class GLLSentence(Sentence):
 
     def __init__(self):
         super(GLLSentence, self).__init__()
+
+    def to_dict(self):
+        d = super(GLLSentence, self).to_dict()
+        d.update(LatLonMixin.to_dict(self))
+        return d
 
 
 class VTGSentence(Sentence):
