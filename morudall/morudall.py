@@ -145,7 +145,7 @@ class Morudall(mqtt.Client):
                 traceback.print_exc()
 
     def _save_ap_data(self, data):
-        self._notify.send('near', data['device_id'], 'bus_near')
+        self._notify.send('near', data['device'], 'bus_near')
 
         if self._debug:
             print(data)
