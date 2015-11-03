@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from utils.geo import get_geo_code, get_directions, get_distances
 
-from .services import get_last_ap_data, get_last_gps_data
+import services
 
 
 class AccessPoint(models.Model):
@@ -142,34 +142,6 @@ class Bus(models.Model):
         }
 
     @property
-    def gps_data(self):
-        data = get_last_gps_data(self.device_id)
-        # update cached data.
-        self._cached_gps_data = data
-        return data
-
-    @property
-    def gps_data_cached(self):
-        if not hasattr(self, '_cached_gps_data'):
-            return self.gps_data
-
-        return self._cached_gps_data
-
-    @property
-    def ap_data(self):
-        data = get_last_ap_data(self.device_id)
-        # update cached data.
-        self._cached_ap_data = data
-        return data
-
-    @property
-    def ap_data_cached(self):
-        if not hasattr(self, '_cached_ap_data'):
-            return self.ap_data
-
-        return self._cached_ap_data
-
-    @property
     def estimated_arrival(self):
         '''
             Returns the estimated time to the arrival latitude and longitude
@@ -203,8 +175,7 @@ class Bus(models.Model):
         if not self.location_available:
             return 0.0
 
-        bus_lat = self.gps_data_cached.latitude
-        bus_lon = self.gps_data_cached.longitude
+        bus_lat, bus_lon = self.current_location_cached
         from_lat = self.route.from_stop.latitude
         from_lon = self.route.from_stop.longitude
         to_lat = self.route.to_stop.latitude
@@ -218,23 +189,28 @@ class Bus(models.Model):
 
     @property
     def location_available(self):
-        if self.gps_data:
+        lat, lon = self.current_location
+        if lat and lon:
             return True
         return False
 
     @property
     def current_location(self):
-        if not self.location_available:
-            return None, None
+        self._current_location = services.current_location(self.device_id)
+        return self._current_location
 
-        return self.gps_data_cached.latitude, self.gps_data_cached.longitude
+    @property
+    def current_location_cached(self):
+        if not hasattr(self, '_current_location'):
+            return self.current_location
+        return self._current_location
 
     @property
     def current_location_info(self):
         if not self.location_available:
             return None
 
-        return get_geo_code(*self.current_location)
+        return get_geo_code(*self.current_location_cached)
 
     @property
     def next_stop(self):
@@ -254,7 +230,7 @@ class Bus(models.Model):
         stops = self.route.stops.all()
 
         if stops.count() > 0:
-            bus_lat, bus_lon = self.current_location
+            bus_lat, bus_lon = self.current_location_cached
             to_lat, to_lon = self.route.to_stop.location
             bus_distance = get_directions(bus_lat, bus_lon, to_lat, to_lon).meters
 
@@ -275,16 +251,16 @@ class Bus(models.Model):
 
     @property
     def avg_velocity(self):
-        return 60
+        return services.avg_velocity(self.device_id)
 
     @property
     def is_online(self):
-        return True
+        return services.is_online(self.device_id)
 
     @property
     def is_moving(self):
-        return True
+        return services.is_moving(self.device_id)
 
     @property
     def is_parked(self):
-        return False
+        return services.is_parked(self.device_id)

@@ -2,14 +2,21 @@
 
 import googlemaps
 import requests
+import traceback
 
 from math import ceil
 
 try:
+    import urllib3
+    urllib3.disable_warnings()
+except:
+    pass
+
+try:
     from apps.settings.models import SiteSetting
     API_KEY = SiteSetting.objects.get(key='google_maps_api_key').cast()
-except Exception as e:
-    print(str(e))
+except:
+    traceback.print_exc()
     API_KEY = ''
 
 
@@ -126,8 +133,8 @@ def get_geo_ip(ip):
 
             if res.status_code == 200:
                 return LazyObject(**res.json())
-        except Exception as e:
-            print(str(e))
+        except:
+            traceback.print_exc()
 
     return None
 
@@ -137,8 +144,8 @@ def get_geo_code(latitude, longitude):
         gmaps = googlemaps.Client(key=API_KEY)
         result = gmaps.reverse_geocode((latitude, longitude))
         return GeoCode(result)
-    except Exception as e:
-        print(str(e))
+    except:
+        traceback.print_exc()
 
     return None
 
@@ -154,8 +161,8 @@ def get_directions(origin_latitude, origin_longitude, destination_latitude, dest
                                   #mode='transit', units='metric', language='pt-BR', transit_mode='bus')
         if len(result) == 1:
             return Direction(result)
-    except Exception as e:
-        print(str(e))
+    except:
+        traceback.print_exc()
 
     return None
 
@@ -183,8 +190,8 @@ def get_distances(origins, destinations):
 
             if matrix:
                 return matrix
-    except Exception as e:
-        print(str(e))
+    except:
+        traceback.print_exc()
 
     return None
 

@@ -23,7 +23,7 @@ def index(request):
 @json_response
 def get_bus_list(request):
     ''' Return the complete Bus list. '''
-    return [bus.to_dict() for bus in list(Bus.objects.filter(is_active=True))]
+    return [bus.to_dict() for bus in list(Bus.objects.filter(is_active=True)) if bus.location_available]
 
 
 @allow_methods(['GET'])
@@ -77,7 +77,7 @@ def get_nearest_bus_stop(request):
     lon = request.GET.get('lon')
 
     if lat and lon:
-        nearest = core_service.get_nearest_stop(float(lat), float(lon), ['bus-station'])
+        nearest, _ = core_service.get_nearest_stop(float(lat), float(lon), ['bus-station'])
         return nearest.to_dict() if nearest else {}
 
     return {}
@@ -112,7 +112,7 @@ def get_bus_time_list(request, stop_id):
             'id': bus.id,
             'code': bus.route.code,
             'name': bus.route.name,
-            'time': int(bus.estimated_arrival_to(lat, lon).minutes)
+            'time': bus.estimated_arrival_to(lat, lon)
         }
 
     terminal = BusStop.objects.get(pk=stop_id)

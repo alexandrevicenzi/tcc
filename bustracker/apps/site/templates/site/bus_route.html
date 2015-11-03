@@ -127,16 +127,14 @@
               <span class="semi-huge">{{ bus.estimated_arrival.minutes|floatformat:"0" }}</span> <small>minutos</small>
             </div>
             <div class="col-md-2 text-center">
-              <span class="semi-huge">{{ bus.estimated_arrival.km }}</span> <small>Km</small>
+              <span class="semi-huge">{{ bus.estimated_arrival.km|floatformat:"1" }}</span> <small>Km</small>
             </div>
             <div class="col-md-2 text-center">
-              <span class="semi-huge">{{ bus.avg_velocity }}</span> <small>Km/H</small>
+              <span class="semi-huge">{{ bus.avg_velocity|floatformat:"0" }}</span> <small>Km/H</small>
             </div>
           </div>
         </div>
       </div>
-
-
     {% endif %}
   </div>
 {% endblock %}

@@ -136,8 +136,8 @@ var map = function (module) {
 
         if (bus) {
             bus.setPosition({
-                lat: data.gps_data.latitude,
-                lng: data.gps_data.longitude
+                lat: data.latitude,
+                lng: data.longitude
             });
         }
     };

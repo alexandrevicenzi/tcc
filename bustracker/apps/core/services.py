@@ -1,90 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from utils.geo import get_geo_ip, get_nearest_destination
-
-
-class GpsData(object):
-
-    def __init__(self, obj=None):
-        pass
-
-    @property
-    def latitude(self):
-        # TODO
-        return -26.9115028
-
-    @property
-    def longitude(self):
-        # TODO
-        return -49.081016
-
-    @property
-    def last_update(self):
-        # TODO
-        return datetime.now()
-
-    @property
-    def velocity(self):
-        # TODO:
-        return 60.0
-
-    def to_dict(self):
-        if self.last_update.date() < datetime.now().date():
-            last_update = self.last_update.strftime('%d/%m/%Y')
-        else:
-            last_update = self.last_update.strftime('%H:%M')
-
-        return {
-            'latitude': self.latitude,
-            'longitude': self.longitude,
-            'last_update': last_update,
-            'velocity': self.velocity,
-        }
-
-
-class ApData(object):
-
-    def __init__(self, obj=None):
-        ip = ''
-        self._geo_ip = get_geo_ip(ip)
-
-    @property
-    def latitude(self):
-        return self._geo_ip.get('latitude')
-
-    @property
-    def longitude(self):
-        return self._geo_ip.get('longitude')
-
-    @property
-    def last_update(self):
-        # TODO
-        return datetime.now()
-
-    @property
-    def rssi(self):
-        # TODO
-        return 0
-
-    @property
-    def bssid(self):
-        # TODO
-        return ''
-
-    def to_dict(self):
-        if self.last_update.date() < datetime.now().date():
-            last_update = self.last_update.strftime('%d/%m/%Y')
-        else:
-            last_update = self.last_update.strftime('%H:%M')
-
-        return {
-            'latitude': self.latitude,
-            'longitude': self.longitude,
-            'last_update': last_update,
-            'bssid': self.bssid,
-        }
+from utils.geo import get_nearest_destination, get_distances
+from utils.morudall import get_last_lat_lon, get_avg_velocity, get_last_time_online, get_last_positions
 
 
 def get_nearest_stop(latitude, longitude, kinds=None):
@@ -97,15 +16,65 @@ def get_nearest_stop(latitude, longitude, kinds=None):
 
     if stops.count() > 0:
         pos_list = [(x.latitude, x.longitude) for x in stops]
-        index, _ = get_nearest_destination((latitude, longitude), pos_list)
-        return stops[index]
+        index, distance = get_nearest_destination((latitude, longitude), pos_list)
+        return stops[index], distance
 
-    return None
-
-
-def get_last_gps_data(device_id):
-    return GpsData()
+    return None, None
 
 
-def get_last_ap_data(device_id):
-    return None
+def current_location(device_id):
+    return get_last_lat_lon(device_id)
+
+
+def avg_velocity(device_id):
+    '''
+        Returns the average velocity from the
+        last 10 (if available) data collected.
+    '''
+    return get_avg_velocity(device_id, 10)
+
+
+def is_online(device_id):
+    '''
+        Returns True if the Bus was online in
+        the past 5 minutes.
+    '''
+
+    time = get_last_time_online(device_id)
+
+    if time:
+        min_time = datetime.utcnow() - timedelta(minutes=5)
+        return time > min_time
+
+    return False
+
+
+def is_moving(device_id):
+    '''
+        Returns True if the Bus has moved
+        more then 250m in the last 5 minutes.
+    '''
+    lat, lon = get_last_lat_lon(device_id)
+    positions = list(get_last_positions(device_id))
+
+    if lat and lon and positions:
+        distances = get_distances([(lat, lon)], positions)
+        distance = reduce(lambda acc, item: acc + item.meters, distances) / len(positions)
+        return distance > 250
+
+    return False
+
+
+def is_parked(device_id):
+    '''
+        Returns true if the Bus is not is_moving
+        and is less then 250m from any station
+        or garage.
+    '''
+    if not is_moving(device_id):
+        lat, lon = current_location(device_id)
+        stop, distance = get_nearest_stop(lat, lon, ['bus-station', 'garage'])
+        if stop:
+            return distance < 250
+
+    return False
