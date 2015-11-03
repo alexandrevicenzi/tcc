@@ -6,7 +6,7 @@ import paho.mqtt.client as mqtt
 import traceback
 
 from collections import namedtuple
-from datetime import time
+from datetime import date, time
 from pymongo import MongoClient
 
 import nmea
@@ -60,6 +60,8 @@ def to_mongo_type(d):
     def convert(value):
         if isinstance(value, time):
             return value.strftime('%H:%M:%S')
+        if isinstance(value, date):
+            return value.strftime('%d/%m/%Y')
         elif type(value) == dict:
             return {k: convert(v) for k, v in value.items()}
         else:
@@ -87,6 +89,8 @@ class Morudall(mqtt.Client):
         self.subscribe('/gpslocation')
 
     def _on_message(self, client, userdata, msg):
+        print('Got message from: %s' % msg.topic)
+
         if msg.topic == '/accesspoint':
             try:
                 payload = json.loads(msg.payload)

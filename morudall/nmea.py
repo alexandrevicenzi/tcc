@@ -64,7 +64,9 @@ class Sentence(object):
         self._last = self._fields_count - 1
 
     def parse(self, data):
-        raw_fields = str(data).split(',')
+        data = str(data)
+        sentence, checksum = data.split('*')
+        raw_fields = sentence.split(',')
 
         if len(raw_fields) != self._fields_count:
             raise ParseException('Field count mismatch. Expected %d fields, but found %d.' % (self._fields_count, len(raw_fields)))
@@ -76,9 +78,6 @@ class Sentence(object):
                 value = value.strip()
 
                 if value:
-                    if index == self._last:
-                        value, checksum = value.split('*')
-
                     setattr(self, field_name, field_type(value))
                 else:
                     setattr(self, field_name, None)
@@ -222,8 +221,9 @@ class RMCSentence(Sentence, LatLonMixin, KnotToKmHMixin):
         ('speed_over_ground', 'Speed Over Ground (knots)', float),
         ('course_over_ground', 'Course Over Ground (degrees)', float),
         ('data', 'Date', DateParser),
-        ('magnetic_variation', 'E/W Indicator', str.upper),
-        # ('mode', 'Mode', str), NMEA V 3.00
+        ('magnetic_variation', 'Magnetic variation', str.upper),
+        ('mv_ew_indicator', 'E/W Indicator', str.upper),
+        ('mode', 'Mode', str),
     )
 
     def __init__(self):
@@ -309,5 +309,5 @@ if __name__ == '__main__':
     sentence = parser.parse('$GPVTG,309.62,T, ,M,0.13,N,0.2,K*23')
     print(sentence.to_dict())
 
-    sentence = parser.parse('$GPRMC,161229.487,A,3723.2475,N,12158.3416,W,0.13,309.62,120508,*10')
+    sentence = parser.parse('$GPRMC,161229.487,A,3723.2475,N,12158.3416,W,0.13,309.62,120508,,,A*10')
     print(sentence.to_dict())

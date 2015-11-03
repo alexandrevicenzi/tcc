@@ -14,9 +14,6 @@ MQTT_PORT = 1883
 MQTT_AUTH = Auth('guest', 'guest')
 MQTT_TIMEOUT = 120
 
-MONGO_ADDRESS = 'tcc.alexandrevicenzi.com'
-MONGO_PORT = 27017
-
 
 def run(device_id):
     mq = mqtt.Client()
@@ -24,13 +21,14 @@ def run(device_id):
     mq.connect(MQTT_ADDRESS, MQTT_PORT, MQTT_TIMEOUT)
     #mq.subscribe('/gpslocation', qos=0)
 
-    while True:
-        ts = datetime.now().strftime('%Y-%m-%d-T%H:%M:%S-03:00')
-        gps = '$GPGGA,233452.000,2654.6882,S,04904.9851,W,2,7,1.14,10.8,M,1.7,M,0000,0000*50'
-        data = "{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}" % (gps, ts, device_id)
-        mq.publish('/gpslocation', payload=data, qos=0, retain=False)
-        print('Sent.')
-        time.sleep(30)
+    with open('input.gps', 'r') as f:
+        for line in f.readlines():
+            line = line[:-1]
+            ts = datetime.now().strftime('%Y-%m-%d-T%H:%M:%S-03:00')
+            data = "{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}" % (line, ts, device_id)
+            mq.publish('/gpslocation', payload=data, qos=0, retain=False)
+            print('Sent.')
+            time.sleep(5)
 
 if __name__ == '__main__':
     run(sys.argv[1])
