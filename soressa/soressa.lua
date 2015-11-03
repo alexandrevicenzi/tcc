@@ -20,19 +20,18 @@ end
 local function stop_events()
     gps_off()
     uart.on("data")
-    tmr.stop(3)
     if mq then mq:close() end
 end
 
 local function wifi_err(...)
-    print("Wifi error!")
+    print("Wifi error! Reconnecting in 5 sec.")
     stop_events()
     led.stop_blink()
     led.off(led.WIFI)
     led.off(led.MQTT)
     led.on(led.ERROR)
 
-    tmr.alarm(2, 5000, 0, function ()
+    tmr.alarm(1, 5000, 0, function ()
         tmr.wdclr()
         wifi.sta.connect()
     end)
@@ -74,7 +73,7 @@ gpio.mode(4, gpio.OUTPUT)
 led.setup()
 time.setup()
 
-mq = mqtt.Client("soressa", 120, "guest", "guest")
+mq = mqtt.Client("soressa", 60, "guest", "guest")
 mq:lwt("/lwt", "offline", 0, 0)
 mq:on("offline", function ()
     led.off(led.MQTT)
@@ -117,10 +116,7 @@ on_wifi(wifi.STA_GOTIP, function ()
             wifi.sta.getap(1, scan_ap)
         end
 
-        tmr.alarm(3, 30000, 0, function ()
-            tmr.wdclr()
-            gps_on()
-        end)
+        gps_on()
     end)
 end)
 
