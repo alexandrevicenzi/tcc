@@ -61,12 +61,12 @@ This avoid massive data over MQTT, which makes MQTT breaks easily.
 
 ## LEDs
 
-| Color  | Meaning   | Pin   | GPIO    |
-|:------:|:---------:|:-----:|:-------:|
-| Red    | ERROR LED | pin 2 | GPIO 4  |
-| Green  | GPS LED   | pin 5 | GPIO 14 |
-| Yellow | MQTT LED  | pin 0 | GPIO 16 |
-| Blue   | WIFI LED  | pin 1 | GPIO 5  |
+| Color  | Meaning   | Pin | GPIO    |
+|:------:|:---------:|:---:|:-------:|
+| Red    | ERROR LED | 2   | GPIO 4  |
+| Green  | GPS LED   | 5   | GPIO 14 |
+| Yellow | MQTT LED  | 0   | GPIO 16 |
+| Blue   | WIFI LED  | 1   | GPIO 5  |
 
 All LEDs have a meaning:
 
