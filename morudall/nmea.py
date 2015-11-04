@@ -119,6 +119,9 @@ class LatLonMixin(SentenceMixin):
         Args:
             value: ddmm.mmmm
         '''
+        if not value:
+            return 0.0
+
         d, m = re.match(r'^(\d+)(\d\d\.\d+)$', value).groups()
         return float(d) + float(m) / 60
 
@@ -310,4 +313,10 @@ if __name__ == '__main__':
     print(sentence.to_dict())
 
     sentence = parser.parse('$GPRMC,161229.487,A,3723.2475,N,12158.3416,W,0.13,309.62,120508,,,A*10')
+    print(sentence.to_dict())
+
+    sentence = parser.parse('$GPGGA,234803.979,,,,,0,6,,,M,,M,,*47')
+    print(sentence.to_dict())
+
+    sentence = parser.parse('$GPRMC,234840.953,V,,,,,0.00,0.00,031115,,,N*4C')
     print(sentence.to_dict())
