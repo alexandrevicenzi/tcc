@@ -20,7 +20,7 @@ function halt()
     tmr.stop(0)
 end
 
-tmr.alarm(0, 5000, 0, function()
+tmr.alarm(0, 10000, 0, function()
     w(0, gpio.LOW)
     w(1, gpio.LOW)
     w(2, gpio.LOW)
