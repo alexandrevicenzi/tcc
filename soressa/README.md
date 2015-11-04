@@ -64,9 +64,9 @@ This avoid massive data over MQTT, which makes MQTT breaks easily.
 | Color  | Meaning   | Pin | GPIO    |
 |:------:|:---------:|:---:|:-------:|
 | Red    | ERROR LED | 2   | GPIO 4  |
-| Green  | GPS LED   | 5   | GPIO 14 |
+| Blue   | GPS LED   | 5   | GPIO 14 |
 | Yellow | MQTT LED  | 0   | GPIO 16 |
-| Blue   | WIFI LED  | 1   | GPIO 5  |
+| Green  | WIFI LED  | 1   | GPIO 5  |
 
 All LEDs have a meaning:
 
