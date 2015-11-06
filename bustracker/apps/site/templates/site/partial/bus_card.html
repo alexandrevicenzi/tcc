@@ -1,0 +1,16 @@
+{% load extra %}
+
+<div class="row bus-panel" data-id="{{ bus.id }}">
+    <div class="panel {{ color }}">
+        <div class="panel-heading upper"><strong>{{ bus.route.name }}</strong></div>
+        <div class="panel-body">
+            <div class="pull-left">
+                <i class="fa fa-bus fa-3x" style="line-height: 1.4;"> {{ bus.route.code }}</i>
+            </div>
+            <div class="pull-right">
+                <span class="fa-3x">{{ bus|estimated_arrival_to:station|floatformat:"0" }}</span>
+                <span class="fa-2x">Minutos</span>
+            </div>
+        </div>
+    </div>
+</div>

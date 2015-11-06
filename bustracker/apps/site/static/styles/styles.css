@@ -33,31 +33,12 @@ html, body {
     margin-top: 10px;
 }
 
-.bus-panel .semi-huge {
-    font-size: 24px;
-}
-
-.bus-panel .huge {
-    font-size: 32px;
-}
-
-.tab-content {
-    padding-top: 8px;
-}
-
 .bus-panel {
-    padding-left: 15px;
-    padding-right: 15px;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
-.bus-panel .col-md-2,
-.bus-panel .col-md-3,
-.bus-panel .col-md-5 {
-    padding-left: 2px;
-    padding-right: 2px;
-}
-
-.tab-loading, .map .loading {
+.map .loading {
     padding-top: 25px;
 }
 
@@ -69,13 +50,12 @@ html, body {
     font-weight: bold;
 }
 
-.bus-details {
+.bus-details, .station-details {
     padding-top: 25px;
 }
 
 .bus-details .huge {
-    font-size: 48px;
-    padding: 4px;
+    font-size: 3em;
 }
 
 .bus-details .semi-huge {
@@ -105,4 +85,13 @@ html, body {
 
 .error {
     color: #a94442;
+}
+
+.form-horizontal {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.progress {
+    margin: 0;
 }

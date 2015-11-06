@@ -26,6 +26,8 @@
     }
 
     function getLocation() {
+      console.log('Auto discovery...');
+
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(initMap, locationError);
       } else {

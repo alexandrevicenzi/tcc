@@ -4,165 +4,93 @@
 {% load settings_extras %}
 
 {% block content %}
-  <div>
-    <ul id="nav-terminal" class="nav nav-tabs nav-justified">
-      {% for t in station_list %}
-      <li role="presentation">
-        <a data-toggle="tab" data-id="{{ t.id }}">
-          <i class="fa fa-map-marker"></i> <strong>{{ t.name }}</strong>
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
-
-    <div class="tab-loading text-center" data-bind="visible: isLoading() == true">
-      <i class="fa fa-cog fa-2x fa-spin"></i>
-    </div>
-
-    <div class="tab-content" data-bind="visible: isLoading() === false">
-      <!-- Less than 15 minutes to arive. -->
-      <div class="col-md-3" data-bind="template: { name: 'bus-template', foreach: bus.less15 }"></div>
-      <!-- More than 15 minutes to arive. -->
-      <div class="col-md-3" data-bind="template: { name: 'bus-template', foreach: bus.more15 }"></div>
-      <!-- More than 30 minutes to arive. -->
-      <div class="col-md-3" data-bind="template: { name: 'bus-template', foreach: bus.more30 }"></div>
-      <!-- More than 45 minutes to arive. -->
-      <div class="col-md-3" data-bind="template: { name: 'bus-template', foreach: bus.more45 }"></div>
+  <div class="station-details">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="form-horizontal">
+          <div class="form-group">
+            <label class="col-md-2 col-md-offset-2 control-label">Escolha seu terminal</label>
+            <div class="col-md-4">
+              <select class="form-control" id="stop-list">
+                <option value="0">Selecione</option>
+                {% for t in station_list %}
+                <option value="{{ t.id }}" {% if t.id == station.id %}selected="selected"{% endif %}>{{ t.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <br>
+      {% if bus_list %}
+        <div class="row">
+          <!-- Less than 15 minutes to arive. -->
+          <div class="col-md-3">
+            {% for b in bus_list %}
+              {% include "site/partial/bus_card.html" with bus=b color="panel-success" %}
+            {% endfor %}
+          </div>
+          <!-- More than 15 minutes to arive. -->
+          <div class="col-md-3">
+            {% for b in bus_list %}
+              {% include "site/partial/bus_card.html" with bus=b color="panel-info" %}
+            {% endfor %}
+          </div>
+          <!-- More than 30 minutes to arive. -->
+          <div class="col-md-3">
+            {% for b in bus_list %}
+              {% include "site/partial/bus_card.html" with bus=b color="panel-warning" %}
+            {% endfor %}
+          </div>
+          <!-- More than 45 minutes to arive. -->
+          <div class="col-md-3">
+            {% for b in bus_list %}
+              {% include "site/partial/bus_card.html" with bus=b color="panel-danger" %}
+            {% endfor %}
+          </div>
+        </div>
+      {% elif station %}
+        <div class="row">
+          <div class="col-md-12 text-center"><p>Nenhum ônibus encontrado.</p></div>
+        </div>
+      {% endif %}
     </div>
   </div>
 {% endblock %}
 
 {% block additional_js %}
-
-  <script type="text/html" id="bus-template">
-    <div class="row" data-bind="attr: { 'data-id': id }">
-      <div class="col-md-12">
-        <div class="panel" data-bind="css: panelColor">
-            <div class="panel-heading">
-                <div class="row bus-panel">
-                    <div class="col-md-2">
-                        <i class="fa fa-bus fa-3x"></i>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="huge" data-bind="text: busCode"></span>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="text-center upper"><strong data-bind="text: routeName"></strong></div>
-                    </div>
-                    <div class="col-md-3 text-right">
-                        <div><span class="huge" data-bind="text: remainigTime"></span></div>
-                        <div>Minutos</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </div>
-    </div>
-  </script>
-
   <script type="text/javascript">
-    function BusController() {
-      this.bus = {
-        less15: ko.observable([]),
-        more15: ko.observable([]),
-        more30: ko.observable([]),
-        more45: ko.observable([]),
-      };
+    function chooseStation(position) {
+      console.log('Auto discovery...');
 
-      this.isLoading = ko.observable(true);
-
-      var self = this;
-
-      this.getPanelColor = function (remainigTime) {
-        if (remainigTime <= 15) {
-          return 'panel-success';
-        } else if (remainigTime > 15) {
-          return 'panel-info';
-        } else if (remainigTime > 30) {
-          return 'panel-warning';
-        } else if (remainigTime > 45) {
-          return 'panel-danger';
-        }
-      }
-
-      this.reload = function (terminalId, silent) {
-        console.log('Loading data...');
-
-        if (!silent) {
-          self.isLoading(true);
-
-          // reset
-          self.bus.less15([]);
-          self.bus.more15([]);
-          self.bus.more30([]);
-          self.bus.more45([]);
-        }
-
-        $.get('{% url "api_index" %}bus_stop/' + terminalId + '/bus-time', function (data) {
-          var bust_list = $.map(data, function (o) {
-            return {
-              panelColor: self.getPanelColor(o.time),
-              id: o.id,
-              busCode: o.code,
-              routeName: o.name,
-              remainigTime: o.time
-            }
-          });
-
-          self.bus.less15($.grep(bust_list, function (o) { return o.remainigTime <= 15; }));
-          self.bus.more15($.grep(bust_list, function (o) { return o.remainigTime > 15; }));
-          self.bus.more30($.grep(bust_list, function (o) { return o.remainigTime > 30; }));
-          self.bus.more45($.grep(bust_list, function (o) { return o.remainigTime > 45; }));
-
-          if (!silent) {
-            self.isLoading(false);
-          }
-        });
-      }
-    }
-
-    var busController = new BusController();
-
-    ko.applyBindings(busController);
-  </script>
-
-  <script type="text/javascript">
-    function chooseTab(position) {
         var lat = position.coords.latitude,
             lon = position.coords.longitude;
 
-        // Try to show the nearest terminal tab.
+        // Try to show the nearest stop station.
         $.get('{% url "api_nearest_bus_stop" %}?lat=' + lat + '&lon=' + lon, function (data) {
-          $('#nav-terminal a[data-id=' + data.id + ']').tab('show');
-          busController.reload(data.id);
+          location.search = 'id=' + data.id;
         });
-    }
-
-    function defaultTab() {
-      var tab = $('#nav-terminal li:first');
-      tab.tab('show');
-      busController.reload(tab.data('data-id'));
     }
 
     function getLocation() {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(chooseTab, defaultTab);
-      } else {
-        defaultTab();
+        navigator.geolocation.getCurrentPosition(chooseStation);
       }
     }
 
     $(document).ready(function () {
-      $('#nav-terminal a').click(function (e) {
-        e.preventDefault()
-        busController.reload($(this).data('id'));
+      {% if not request.GET.id %}
+        getLocation();
+      {% endif %}
+
+      $('#stop-list').change(function () {
+        var id = $(this).val();
+        if (id != '0') {
+          location.search = 'id=' + id;
+        } else {
+          location.search = '';
+        }
       });
-
-      getLocation();
-
-      setInterval(function () {
-        busController.reload($('#nav-terminal a[aria-expanded="true"]').data('id'), true);
-      }, 1000 * 60);
     });
   </script>
 {% endblock %}

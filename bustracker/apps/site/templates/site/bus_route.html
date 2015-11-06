@@ -6,19 +6,20 @@
 
 {% block content %}
   <div class="bus-details">
-    <div class="form-horizontal">
-      <div class="form-group">
-        <label class="col-md-2 col-md-offset-2 control-label">Escolha seu ônibus</label>
-        <div class="col-md-4">
-          <select class="form-control" id="bus-list">
-            <option>Selecione</option>
-            {% for b in bus_list %}
-            <option value="{{ b.id }}" {% if b.id == bus.id %}selected="selected"{% endif %}>{{ b.route.code }} - {{ b.route.name }}</option>
-            {% endfor %}
-          </select>
+    <div class="container-fluid">
+      <div class="form-horizontal">
+        <div class="form-group">
+          <label class="col-md-2 col-md-offset-2 control-label">Escolha seu ônibus</label>
+          <div class="col-md-4">
+            <select class="form-control" id="bus-list">
+              <option value="0">Selecione</option>
+              {% for b in bus_list %}
+              <option value="{{ b.id }}" {% if b.id == bus.id %}selected="selected"{% endif %}>{{ b.route.code }} - {{ b.route.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
       </div>
-    </div>
     {% if bus %}
       <div class="row">
         <div class="col-md-12 text-center">
@@ -86,15 +87,15 @@
       </div>
       <div class="row">
         <div class="col-md-12 text-center">
-          <small>{{ bus.next_stop.name }}</small>
+          <small>{{ bus.next_stop.name|default:"-" }}</small>
         </div>
       </div>
 
       <br>
 
       <div class="row">
-        <div class="col-md-3">
-          <span class="pull-right upper bold"><i class="fa fa-map-marker"></i> {{ bus.route.from_stop.name }}</span>
+        <div class="col-md-3 text-center">
+          <span class="upper bold"><i class="fa fa-map-marker"></i> {{ bus.route.from_stop.name }}</span>
         </div>
         <div class="col-md-6">
           <div class="progress">
@@ -105,41 +106,45 @@
             </div>
           </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-3 text-center">
           <span class="upper bold"><i class="fa fa-map-marker"></i> {{ bus.route.to_stop.name }}</span>
         </div>
       </div>
 
+      <br>
+
       <div class="row">
         <div class="col-md-12">
-          <div class="row">
-            <div class="col-md-2 col-md-offset-3 text-center">
+          {% with estimated_arrival=bus.estimated_arrival %}
+          <div class="col-md-2 col-md-offset-3 text-center">
+            <div class="row">
               <span class="bold s16">Tempo estimado</span>
             </div>
-            <div class="col-md-2 text-center">
+            <div class="row">
+              <span class="semi-huge">{{ estimated_arrival.minutes|floatformat:"0"|default:"?" }}</span> <small>minutos</small>
+            </div>
+          </div>
+          <div class="col-md-2 text-center">
+            <div class="row">
               <span class="bold s16">Distância</span>
             </div>
-            <div class="col-md-2 text-center">
+            <div class="row">
+              <span class="semi-huge">{{ estimated_arrival.km|floatformat:"1"|default:"?" }}</span> <small>Km</small>
+            </div>
+          </div>
+          <div class="col-md-2 text-center">
+            <div class="row">
               <span class="bold s16">Velocidade média</span>
             </div>
-          </div>
-
-          <div class="row">
-            {% with estimated_arrival=bus.estimated_arrival %}
-            <div class="col-md-2 col-md-offset-3 text-center">
-              <span class="semi-huge">{{ estimated_arrival.minutes|floatformat:"0" }}</span> <small>minutos</small>
-            </div>
-            <div class="col-md-2 text-center">
-              <span class="semi-huge">{{ estimated_arrival.km|floatformat:"1" }}</span> <small>Km</small>
-            </div>
-            <div class="col-md-2 text-center">
+            <div class="row">
               <span class="semi-huge">{{ bus.avg_velocity|floatformat:"0" }}</span> <small>Km/H</small>
             </div>
-            {% endwith %}
           </div>
+          {% endwith %}
         </div>
       </div>
     {% endif %}
+    </div>
   </div>
 {% endblock %}
 
@@ -147,7 +152,12 @@
   <script type="text/javascript">
     $(document).ready(function () {
       $('#bus-list').change(function () {
-        location.search = 'id=' + $(this).val();
+        var id = $(this).val();
+        if (id != '0') {
+          location.search = 'id=' + id;
+        } else {
+          location.search = '';
+        }
       });
     });
   </script>
