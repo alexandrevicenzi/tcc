@@ -52,6 +52,10 @@ class AccessPoint(models.Model):
             'bssid': self.bssid,
         }
 
+    class Meta:
+        verbose_name = _(u'Access Point')
+        verbose_name_plural = _(u'Access Points')
+
 
 class BusStop(models.Model):
 
@@ -71,7 +75,8 @@ class BusStop(models.Model):
     latitude = models.DecimalField(verbose_name=_(u'Latitude'), max_digits=12, decimal_places=8)
     longitude = models.DecimalField(verbose_name=_(u'Longitude'), max_digits=12, decimal_places=8)
     aps = models.ManyToManyField(AccessPoint, related_name='ap_set', verbose_name=_(u'APs do Terminal (+)'), blank=True)
-    stop_type = models.CharField(max_length=15,
+    stop_type = models.CharField(verbose_name=_(u'Tipo da Parada'),
+                                 max_length=15,
                                  choices=STOP_TYPES,
                                  default=BUS_STATION)
 
@@ -92,6 +97,10 @@ class BusStop(models.Model):
             'type': self.stop_type,
             'aps': [x.to_dict() for x in self.aps.filter(is_active=True)]
         }
+
+    class Meta:
+        verbose_name = _(u'Ponto de Parada')
+        verbose_name_plural = _(u'Pontos de Parada')
 
 
 class BusRoute(models.Model):
@@ -116,6 +125,10 @@ class BusRoute(models.Model):
             'to': self.to_stop.to_dict(),
             'stops': [x.to_dict() for x in self.stops.filter(is_active=True)]
         }
+
+    class Meta:
+        verbose_name = _(u'Rota')
+        verbose_name_plural = _(u'Rotas')
 
 
 class Bus(models.Model):
@@ -264,3 +277,7 @@ class Bus(models.Model):
     @property
     def is_parked(self):
         return services.is_parked(self.device_id)
+
+    class Meta:
+        verbose_name = _(u'Ônibus')
+        verbose_name_plural = _(u'Ônibus')

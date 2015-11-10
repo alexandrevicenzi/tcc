@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 
 class SiteSetting(models.Model):
@@ -18,10 +19,11 @@ class SiteSetting(models.Model):
         (INT, 'Integer'),
     )
 
-    is_active = models.BooleanField(default=True)
-    key = models.CharField(max_length=100)
-    value = models.CharField(max_length=800)
-    value_type = models.CharField(max_length=10,
+    is_active = models.BooleanField(verbose_name=_(u'Ativo'), default=True)
+    key = models.CharField(verbose_name=_(u'Chave'), max_length=100)
+    value = models.CharField(verbose_name=_(u'Valor'), max_length=800)
+    value_type = models.CharField(verbose_name=_(u'Tipo'),
+                                  max_length=10,
                                   choices=SETTING_TYPES,
                                   default=STR)
 
@@ -39,3 +41,7 @@ class SiteSetting(models.Model):
             return float(self.value)
 
         return self.value
+
+    class Meta:
+        verbose_name = _(u'Configuração do Sistema')
+        verbose_name_plural = _(u'Configurações do Sistema')
