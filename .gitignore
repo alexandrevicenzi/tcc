@@ -61,3 +61,4 @@ venv
 *.bin
 wpa.conf
 *.pdf
+.DS_Store

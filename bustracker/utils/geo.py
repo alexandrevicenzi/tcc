@@ -16,7 +16,7 @@ try:
     from apps.settings.models import SiteSetting
     API_KEY = SiteSetting.objects.get(key='google_maps_api_key').cast()
 except:
-    traceback.print_exc()
+    print('Google API KEY not found!')
     API_KEY = ''
 
 
