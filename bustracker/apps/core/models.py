@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from utils.geo import get_geo_code, get_directions, get_distances
 
-import services
+from . import services
 
 
 class AccessPoint(models.Model):
