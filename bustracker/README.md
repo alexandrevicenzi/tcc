@@ -4,6 +4,12 @@ The main Web application to check where your bus is.
 
 ## Setup
 
+### venv 3.4
+
+To create a virtualenv with Python 3.4 run:
+
+`virtualenv -p /usr/bin/python3.4 venv`
+
 ### Install all packages
 
 `pip install -r requirements.txt`
