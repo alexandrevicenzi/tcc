@@ -7,12 +7,6 @@ import traceback
 from math import ceil
 
 try:
-    import urllib3
-    urllib3.disable_warnings()
-except:
-    pass
-
-try:
     from apps.settings.models import SiteSetting
     API_KEY = SiteSetting.objects.get(key='google_maps_api_key').cast()
 except:
@@ -209,7 +203,7 @@ def get_nearest_destination(origin, destinations):
 
     if d:
         distance = sorted(d.values(), key=lambda item: item.meters)[0]
-        key = d.keys()[d.values().index(distance)]
+        key = list(d.keys())[list(d.values()).index(distance)]
         index = destinations.index(key[1])
         return index, distance
 
