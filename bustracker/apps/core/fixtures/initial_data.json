@@ -1,0 +1,133 @@
+[{
+    "fields": {
+        "name": "Terminal Proeb",
+        "aps": [],
+        "is_active": true,
+        "longitude": "-49.08080850",
+        "details": "",
+        "stop_type": "bus-station",
+        "latitude": "-26.91166740"
+    },
+    "model": "core.busstop",
+    "pk": 1
+}, {
+    "fields": {
+        "name": "Terminal Aterro",
+        "aps": [],
+        "is_active": true,
+        "longitude": "-49.09508560",
+        "details": "",
+        "stop_type": "bus-station",
+        "latitude": "-26.87138820"
+    },
+    "model": "core.busstop",
+    "pk": 2
+}, {
+    "fields": {
+        "name": "Terminal da Fonte",
+        "aps": [],
+        "is_active": true,
+        "longitude": "-49.05839990",
+        "details": "",
+        "stop_type": "bus-station",
+        "latitude": "-26.92863020"
+    },
+    "model": "core.busstop",
+    "pk": 3
+}, {
+    "fields": {
+        "name": "Terminal da Fortaleza",
+        "aps": [],
+        "is_active": true,
+        "longitude": "-49.06688340",
+        "details": "",
+        "stop_type": "bus-station",
+        "latitude": "-26.87936490"
+    },
+    "model": "core.busstop",
+    "pk": 4
+}, {
+    "fields": {
+        "name": "Terminal da Velha",
+        "aps": [],
+        "is_active": true,
+        "longitude": "-49.13025130",
+        "details": "",
+        "stop_type": "bus-station",
+        "latitude": "-26.93443250"
+    },
+    "model": "core.busstop",
+    "pk": 5
+}, {
+    "fields": {
+        "name": "Terminal Garcia",
+        "aps": [],
+        "is_active": true,
+        "longitude": "-49.06536180",
+        "details": "",
+        "stop_type": "bus-station",
+        "latitude": "-26.96235820"
+    },
+    "model": "core.busstop",
+    "pk": 6
+}, {
+    "fields": {
+        "name": "Estacionamento Gloria",
+        "aps": [],
+        "is_active": true,
+        "longitude": "-49.08229060",
+        "details": "Estacionamento ao lado do BIG",
+        "stop_type": "garage",
+        "latitude": "-26.91315980"
+    },
+    "model": "core.busstop",
+    "pk": 7
+}, {
+    "fields": {
+        "name": "Ponto Newboling",
+        "aps": [],
+        "is_active": true,
+        "longitude": "-49.06775870",
+        "details": "Ponto em frente ao Newboling na 7 de Setembro",
+        "stop_type": "bus-stop",
+        "latitude": "-26.92060830"
+    },
+    "model": "core.busstop",
+    "pk": 8
+}, {
+    "fields": {
+        "code": 11,
+        "name": "TRONCAL - VIA 2 DE SETEMBRO",
+        "from_stop": 2,
+        "to_stop": 3,
+        "is_active": true,
+        "stops": [],
+        "details": ""
+    },
+    "model": "core.busroute",
+    "pk": 1
+}, {
+    "fields": {
+        "code": 11,
+        "name": "TRONCAL - VIA 2 DE SETEMBRO",
+        "from_stop": 3,
+        "to_stop": 2,
+        "is_active": true,
+        "stops": [],
+        "details": ""
+    },
+    "model": "core.busroute",
+    "pk": 2
+}, {
+    "fields": {
+        "code": 32,
+        "name": "TRONCAL - VIA \u00c1GUA VERDE",
+        "from_stop": 5,
+        "to_stop": 3,
+        "is_active": true,
+        "stops": [1],
+        "details": ""
+    },
+    "model": "core.busroute",
+    "pk": 3
+}]

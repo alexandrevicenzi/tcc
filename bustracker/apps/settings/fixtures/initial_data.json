@@ -1,42 +1,37 @@
-[
-    {
-        "fields": {
-            "value_type": "float",
-            "is_active": true,
-            "value": "-26.9115028",
-            "key": "default_latitude"
-        },
-        "model": "settings.sitesetting",
-        "pk": 1
+[{
+    "fields": {
+        "value_type": "float",
+        "is_active": true,
+        "value": "-26.9115028",
+        "key": "default_latitude"
     },
-    {
-        "fields": {
-            "value_type": "float",
-            "is_active": true,
-            "value": "-49.081016",
-            "key": "default_longitude"
-        },
-        "model": "settings.sitesetting",
-        "pk": 2
+    "model": "settings.sitesetting",
+    "pk": 1
+}, {
+    "fields": {
+        "value_type": "float",
+        "is_active": true,
+        "value": "-49.081016",
+        "key": "default_longitude"
     },
-    {
-        "fields": {
-            "value_type": "str",
-            "is_active": true,
-            "value": "<key>",
-            "key": "google_maps_api_key"
-        },
-        "model": "settings.sitesetting",
-        "pk": 3
+    "model": "settings.sitesetting",
+    "pk": 2
+}, {
+    "fields": {
+        "value_type": "str",
+        "is_active": true,
+        "value": "hide",
+        "key": "google_maps_api_key"
     },
-    {
-        "fields": {
-            "value_type": "str",
-            "is_active": true,
-            "value": "<key>",
-            "key": "api_token"
-        },
-        "model": "settings.sitesetting",
-        "pk": 4
-    }
-]
+    "model": "settings.sitesetting",
+    "pk": 3
+}, {
+    "fields": {
+        "value_type": "str",
+        "is_active": true,
+        "value": "hide",
+        "key": "api_token"
+    },
+    "model": "settings.sitesetting",
+    "pk": 4
+}]
