@@ -28,7 +28,7 @@ def run(device_id):
             data = "{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}" % (line, ts, device_id)
             mq.publish('/gpslocation', payload=data, qos=0, retain=False)
             print('Sent.')
-            time.sleep(5)
+            time.sleep(0.1)
 
 if __name__ == '__main__':
     run(sys.argv[1])

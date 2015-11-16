@@ -153,6 +153,16 @@ class Morudall(mqtt.Client):
             return self._db.ap_data.insert_one(to_mongo_type(data)).inserted_id
 
     def _save_gps_data(self, data):
+        is_valid = data.get('gps_data', {}).get('is_valid', False)
+
+        if is_valid:
+            lat = data.get('gps_data', {}).get('latitude_degree')
+            lon = data.get('gps_data', {}).get('longitude_degree')
+
+            if lat and lon:
+                sse_data = '%s,%f,%f' % (data['device'], lat, lon)
+                self._notify.send('position', sse_data, 'bus_position')
+
         if self._debug:
             print(data)
         else:
