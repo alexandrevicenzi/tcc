@@ -18,4 +18,9 @@ urlpatterns = [
     url(r'^bus-near-stream/$',
         EventStreamView.as_view(channel='bus_near'),
         name='bus_near_stream'),
+
+    # event stream
+    url(r'^bus-position-stream/$',
+        EventStreamView.as_view(channel='bus_position'),
+        name='bus_position_stream'),
 ]

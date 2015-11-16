@@ -63,6 +63,21 @@
           map.addBus(bus);
         });
       });
+
+      if (window.EventSource) {
+        var eventSource = new EventSource('{% url "bus_position_stream" %}');
+
+        eventSource.addEventListener('position', function(e) {
+          var info = e.data.split(',');
+          map.updateBusLocation({
+            device_id: info[0],
+            latitude: Number(info[1]),
+            longitude: Number(info[2])
+          })
+        });
+      } else {
+        console.warn('SSE not supported!');
+      }
     }
   </script>
   <script src="https://maps.googleapis.com/maps/api/js?key={% setting 'google_maps_api_key' %}&callback=getLocation"
