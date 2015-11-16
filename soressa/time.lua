@@ -29,7 +29,7 @@ local function time()
     month = to_decimal(string.byte(bytes, 6))
     year = to_decimal(string.byte(bytes, 7))
 
-    return string.format("20%s-%s-%s-T%s:%s:%s-03:00", year, month, day_of_month, hour, minute, second)
+    return string.format("20%s-%s-%s-T%s:%s:%s", year, month, day_of_month, hour, minute, second)
 end
 
 return {

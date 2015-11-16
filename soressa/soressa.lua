@@ -89,7 +89,7 @@ local function load_ap()
         line = file.readline()
 
         while line ~= nil do
-            ssid, pwd, bssid = string.match(line, "([^,]+),([^,]+),([^,]+)")
+            ssid, pwd, bssid = string.match(line, "([^,]+),([^,]+),([^,]+)\n")
             wifi.sta.config(ssid, pwd, 1, bssid)
             line = file.readline()
         end

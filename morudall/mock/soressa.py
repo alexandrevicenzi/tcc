@@ -24,7 +24,7 @@ def run(device_id):
     with open('input.gps', 'r') as f:
         for line in f.readlines():
             line = line[:-1]
-            ts = datetime.now().strftime('%Y-%m-%d-T%H:%M:%S-03:00')
+            ts = datetime.now().strftime('%Y-%m-%d-T%H:%M:%S')
             data = "{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}" % (line, ts, device_id)
             mq.publish('/gpslocation', payload=data, qos=0, retain=False)
             print('Sent.')
