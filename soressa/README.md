@@ -91,4 +91,3 @@ The most annoying problem is that ESP or NodeMCU crashes a lot. It's really anno
 ## License
 
 MIT
-

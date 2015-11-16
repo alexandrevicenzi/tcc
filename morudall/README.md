@@ -8,8 +8,16 @@ Install all packages:
 
 `pip install -r requirements.txt`
 
+## Extra setup
+
 You also need to setup Redis and MongoDB.
 
 ## Run
 
 `python morudall.py`
+
+## Mock Soressa
+
+Run `soressa.py` with a custom `input.gps`.
+
+`python soressa.py <device_id>`

@@ -22,8 +22,6 @@ To create a virtualenv with Python 3.4 run:
 
 `./manage.py createsuperuser`
 
-You also need to setup Redis and MongoDB.
-
 ### Loading Fixtures
 
 To load settings fixtures:
@@ -33,6 +31,10 @@ To load settings fixtures:
 To load core fixtures:
 
 `./manage.py loaddata apps/core/fixtures/initial_data.json`
+
+## Extra setup
+
+You also need to setup Redis and MongoDB.
 
 ## Run
 
