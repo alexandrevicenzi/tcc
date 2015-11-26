@@ -4,6 +4,8 @@ The main Web application to check where your bus is.
 
 ## Setup
 
+This project requires Python 3.2+.
+
 ### venv 3.4
 
 To create a virtualenv with Python 3.4 run:

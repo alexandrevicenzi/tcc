@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import googlemaps
-import requests
 import traceback
 
+from functools import lru_cache
 from math import ceil
 
 try:
@@ -119,20 +119,7 @@ class Distance(BaseDirection):
         super(Distance, self).__init__(data)
 
 
-def get_geo_ip(ip):
-    if ip:
-        try:
-            # For better performance, this must be replaced by MaxMind Database.
-            res = requests.get('http://www.telize.com/geoip/%s' % ip)
-
-            if res.status_code == 200:
-                return LazyObject(**res.json())
-        except:
-            traceback.print_exc()
-
-    return None
-
-
+@lru_cache(maxsize=None, typed=True)
 def get_geo_code(latitude, longitude):
     try:
         gmaps = googlemaps.Client(key=API_KEY)
@@ -144,6 +131,7 @@ def get_geo_code(latitude, longitude):
     return None
 
 
+@lru_cache(maxsize=None, typed=True)
 def get_directions(origin_latitude, origin_longitude, destination_latitude, destination_longitude):
     '''
         Get the distance between to points.
@@ -161,7 +149,8 @@ def get_directions(origin_latitude, origin_longitude, destination_latitude, dest
     return None
 
 
-def get_distances(origins, destinations):
+@lru_cache(maxsize=None, typed=True)
+def get_distances_wrap(origins, destinations):
     '''
         Get the distances between many points.
         Returns an interpolated dict, where's the key is
@@ -169,6 +158,9 @@ def get_distances(origins, destinations):
         the distance between these points.
     '''
     try:
+        origins = list(origins)
+        destinations = list(destinations)
+
         gmaps = googlemaps.Client(key=API_KEY)
         result = gmaps.distance_matrix(origins, destinations,
                                        mode='driving', units='metric')
@@ -190,7 +182,12 @@ def get_distances(origins, destinations):
     return None
 
 
-def get_nearest_destination(origin, destinations):
+def get_distances(origins, destinations):
+    return get_distances_wrap(frozenset(origins), frozenset(destinations))
+
+
+@lru_cache(maxsize=None, typed=True)
+def get_nearest_destination_wrap(origin, destinations):
     '''
         Given the origin, discover who is nearest.
 
@@ -199,6 +196,8 @@ def get_nearest_destination(origin, destinations):
             - Returns the shortest distance to origin.
     '''
     origins = [origin]
+    destinations = list(destinations)
+
     d = get_distances(origins, destinations)
 
     if d:
@@ -210,8 +209,10 @@ def get_nearest_destination(origin, destinations):
     return None, None
 
 
+def get_nearest_destination(origin, destinations):
+    return get_nearest_destination_wrap(origin, frozenset(destinations))
+
 if __name__ == '__main__':
-    print(get_geo_ip('8.8.8.8').to_dict())
     print(get_geo_code(-26.9115028, -49.081016).to_dict())
     print(get_directions(-26.9115028, -49.081016, -26.8712873, -49.0956086).to_dict())
     origins = [(-26.9115028, -49.081016), (-26.92060830, -49.06775870)]

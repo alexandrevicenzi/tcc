@@ -62,3 +62,5 @@ venv
 wpa.conf
 *.pdf
 .DS_Store
+*.fzz
+
