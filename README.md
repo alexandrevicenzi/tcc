@@ -1,16 +1,18 @@
 # TCC
 
-Well, at least I'll try :joy:
+Bus Tracking System
 
-## BusTracker
+## Projects
+
+### BusTracker :bus:
 
 The main Web application to check where your bus is.
 
-## Morudall
+### Morudall :inbox_tray:
 
 This module subscribe to a MQTT Broker and listen for messages from Soressa. Process and store all messages from Soressa.
 
-## Soressa
+### Soressa :outbox_tray:
 
 This module runs on ESP8266 and send messagens to a MQTT Broker.
 
