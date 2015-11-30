@@ -36,7 +36,7 @@ To load core fixtures:
 
 ## Extra setup
 
-You also need to setup Redis and MongoDB.
+You also need to setup Nginx (production only), Redis and MongoDB.
 
 ## Run
 
@@ -46,7 +46,7 @@ You also need to setup Redis and MongoDB.
 
 ### Release
 
-TODO
+`uwsgi --ini uwsgi.ini`
 
 ### Dumping DB
 
