@@ -8,6 +8,7 @@ sudo apt-get update
 sudo apt-get install -y mosquitto
 sudo apt-get install -y mongodb-org
 sudo apt-get install -y redis-server redis-tools
+sudo apt-get install -y python-virtualenv virtualenvwrapper build-essential python-dev python3.4-dev git
 
 # sudo service mosquitto start
 # sudo service mongod start

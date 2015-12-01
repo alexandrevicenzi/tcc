@@ -2,25 +2,26 @@
 
 import dateutil.parser
 import json
+import nmea
+import notify
 import paho.mqtt.client as mqtt
 import traceback
 
 from collections import namedtuple
 from datetime import date, time
+from lazyconfig import lazyconfig
 from pymongo import MongoClient
 
-import nmea
-import notify
 
 Auth = namedtuple('Auth', ['user', 'pwd'])
 
-MQTT_ADDRESS = 'tcc.alexandrevicenzi.com'
-MQTT_PORT = 1883
-MQTT_AUTH = Auth('guest', 'guest')
-MQTT_TIMEOUT = 120
+MQTT_ADDRESS = lazyconfig.config.mqtt.address
+MQTT_PORT = lazyconfig.config.mqtt.port
+MQTT_AUTH = Auth(lazyconfig.config.mqtt.auth.user, lazyconfig.config.mqtt.auth.pwd)
+MQTT_TIMEOUT = lazyconfig.config.mqtt.timeout
 
-MONGO_ADDRESS = 'tcc.alexandrevicenzi.com'
-MONGO_PORT = 27017
+MONGO_ADDRESS = lazyconfig.config.mongo.address
+MONGO_PORT = lazyconfig.config.mongo.port
 
 
 def signal_quality(db):
@@ -93,7 +94,7 @@ class Morudall(mqtt.Client):
 
         if msg.topic == '/accesspoint':
             try:
-                payload = json.loads(msg.payload)
+                payload = json.loads(msg.payload.decode('utf-8'))
                 device_id = payload['id']
                 dt = dateutil.parser.parse(payload['ts'])
                 bssid, ssid, rssi, authmode, channel = payload['data'].split(',')
@@ -117,7 +118,7 @@ class Morudall(mqtt.Client):
 
         if msg.topic == '/gpslocation':
             try:
-                payload = json.loads(msg.payload)
+                payload = json.loads(msg.payload.decode('utf-8'))
                 device_id = payload['id']
                 dt = dateutil.parser.parse(payload['ts'])
                 nmea_sentece = payload['data']

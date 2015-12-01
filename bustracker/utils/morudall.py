@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta
+from django.conf import settings
 from pymongo import MongoClient, DESCENDING
-
-MONGO_ADDRESS = 'tcc.alexandrevicenzi.com'
-MONGO_PORT = 27017
 
 
 class Morudall(object):
 
     def __init__(self):
-        uri = 'mongodb://%s:%d/' % (MONGO_ADDRESS, MONGO_PORT)
+        uri = 'mongodb://%s:%d/' % (settings.MONGO_ADDRESS, settings.MONGO_PORT)
         mc = MongoClient(uri)
         self.db = mc['morudall']
 

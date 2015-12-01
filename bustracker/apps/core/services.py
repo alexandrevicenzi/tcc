@@ -73,8 +73,9 @@ def is_parked(device_id):
     '''
     if not is_moving(device_id):
         lat, lon = current_location(device_id)
-        stop, distance = get_nearest_stop(lat, lon, ['bus-station', 'garage'])
-        if stop:
-            return distance < 250
+        if lat and lon:
+            stop, distance = get_nearest_stop(lat, lon, ['bus-station', 'garage'])
+            if stop:
+                return distance < 250
 
     return False

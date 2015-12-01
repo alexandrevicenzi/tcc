@@ -9,7 +9,7 @@ from datetime import datetime
 
 Auth = namedtuple('Auth', ['user', 'pwd'])
 
-MQTT_ADDRESS = 'tcc.alexandrevicenzi.com'
+MQTT_ADDRESS = '127.0.0.1'
 MQTT_PORT = 1883
 MQTT_AUTH = Auth('guest', 'guest')
 MQTT_TIMEOUT = 120
@@ -25,7 +25,7 @@ def run(device_id):
         for line in f.readlines():
             line = line[:-1]
             ts = datetime.now().strftime('%Y-%m-%d-T%H:%M:%S')
-            data = "{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}" % (line, ts, device_id)
+            data = '{\"data\":\"%s\",\"ts\":\"%s\",\"id\":\"%s\"}' % (line, ts, device_id)
             mq.publish('/gpslocation', payload=data, qos=0, retain=False)
             print('Sent.')
             time.sleep(0.1)

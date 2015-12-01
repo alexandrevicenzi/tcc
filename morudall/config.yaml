@@ -1,0 +1,10 @@
+mqtt:
+  address: '127.0.0.1'
+  port: 1883
+  auth:
+    user: 'guest'
+    pwd: 'guest'
+  timeout: 60
+mongo:
+  address: '127.0.0.1'
+  port: 27017

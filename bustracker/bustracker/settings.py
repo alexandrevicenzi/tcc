@@ -89,7 +89,7 @@ DATABASES = {
 # https://github.com/gfronza/django-sse-wrapper
 SSE_BACKEND_CLASS = 'sse_wrapper.backends.redis_based.RedisBasedBackend'
 SSE_BACKEND_CONNECTION_SETTINGS = {
-    'host': 'localhost',
+    'host': '127.0.0.1',
     'port': 6379,
     'db': 0,
 }
@@ -108,3 +108,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Morudall
+MONGO_ADDRESS = '127.0.0.1'
+MONGO_PORT = 27017
