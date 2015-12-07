@@ -32,19 +32,19 @@
           </div>
           <!-- More than 15 minutes to arive. -->
           <div class="col-md-3">
-            {% for b in bus_list %}
+            {% for b in bus_list_15 %}
               {% include "site/partial/bus_card.html" with bus=b color="panel-info" %}
             {% endfor %}
           </div>
           <!-- More than 30 minutes to arive. -->
           <div class="col-md-3">
-            {% for b in bus_list %}
+            {% for b in bus_list_30 %}
               {% include "site/partial/bus_card.html" with bus=b color="panel-warning" %}
             {% endfor %}
           </div>
           <!-- More than 45 minutes to arive. -->
           <div class="col-md-3">
-            {% for b in bus_list %}
+            {% for b in bus_list_45 %}
               {% include "site/partial/bus_card.html" with bus=b color="panel-danger" %}
             {% endfor %}
           </div>

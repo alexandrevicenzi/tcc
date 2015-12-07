@@ -170,7 +170,7 @@ class Bus(models.Model):
             based on the position of the bus.
         '''
         if not self.location_available:
-            return 0
+            return None
 
         bus_lat, bus_lon = self.current_location
         return get_directions(bus_lat, bus_lon, latitude, longitude)

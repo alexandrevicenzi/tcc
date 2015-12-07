@@ -37,7 +37,7 @@ class GeoCode(object):
                     value = component['short_name'] if short else component['long_name']
                     setattr(self, attr_name, value)
 
-        return getattr(self, attr_name)
+        return getattr(self, attr_name) if hasattr(self, attr_name) else ''
 
     @property
     def street_name(self):

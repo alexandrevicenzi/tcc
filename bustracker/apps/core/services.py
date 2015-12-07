@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta
+from functools import reduce
 
 from utils.geo import get_nearest_destination, get_distances
 from utils.morudall import get_last_lat_lon, get_avg_velocity, get_last_time_online, get_last_positions
@@ -59,6 +60,7 @@ def is_moving(device_id):
 
     if lat and lon and positions:
         distances = get_distances([(lat, lon)], positions)
+        distances = list(distances.values())
         distance = reduce(lambda acc, item: acc + item.meters, distances) / len(positions)
         return distance > 250
 

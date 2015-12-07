@@ -8,7 +8,7 @@ import paho.mqtt.client as mqtt
 import traceback
 
 from collections import namedtuple
-from datetime import date, time
+from datetime import date, datetime, time
 from lazyconfig import lazyconfig
 from pymongo import MongoClient
 
@@ -59,6 +59,8 @@ def extract_gps_data(data):
 
 def to_mongo_type(d):
     def convert(value):
+        if isinstance(value, datetime):
+            return value
         if isinstance(value, time):
             return value.strftime('%H:%M:%S')
         if isinstance(value, date):
