@@ -94,6 +94,20 @@ def get_last_positions(device_id):
 
     return
 
+
+def update_position_ap(device_id, bssid):
+    from apps.core.models import BusStop
+    stops = BusStop.objects.filter(aps__bssid=bssid)
+    if stops.count() > 0:
+        data = {
+            'device': device_id,
+            'time': datetime.now(),
+            'latitude': float(stops[0].latitude),
+            'longitude': float(stops[0].longitude),
+            'is_valid': True,
+        }
+        Morudall().db.gps_data.insert_one(data)
+
 if __name__ == '__main__':
     import sys
 

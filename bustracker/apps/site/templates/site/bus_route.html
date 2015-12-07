@@ -182,15 +182,20 @@
 {% if bus %}
 
       if (window.EventSource) {
-        var eventSource = new EventSource('{% url "bus_position_stream" %}');
+        var eventSourcePos = new EventSource('{% url "bus_position_stream" %}');
+        var eventSourceNear = new EventSource('{% url "bus_near_stream" %}');
 
-        eventSource.addEventListener('position', function(e) {
+        eventSourcePos.addEventListener('position', function(e) {
           var info = e.data.split(',');
           var device_id = info[0];
 
           if (device_id == '{{ bus.device_id }}') {
             reload_page();
           }
+        });
+
+        eventSourceNear.addEventListener('near', function(e) {
+          reload_page();
         });
       } else {
         console.warn('SSE not supported!');

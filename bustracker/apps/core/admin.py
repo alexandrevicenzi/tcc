@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import Bus, BusRoute, BusStop
+from .models import AccessPoint, Bus, BusRoute, BusStop
+
+
+class AccessPointAdmin(admin.ModelAdmin):
+    list_display = ('id', 'ssid', 'bssid', 'is_active')
+    list_filter = ('is_active',)
+    ordering = ('id',)
 
 
 class BusAdmin(admin.ModelAdmin):
@@ -27,6 +33,7 @@ class BusStopAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+admin.site.register(AccessPoint, AccessPointAdmin)
 admin.site.register(Bus, BusAdmin)
 admin.site.register(BusRoute, BusRouteAdmin)
 admin.site.register(BusStop, BusStopAdmin)

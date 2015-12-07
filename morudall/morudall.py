@@ -110,7 +110,7 @@ class Morudall(mqtt.Client):
                         'rssi': rssi,
                         'authmode': authmode,
                         'channel': channel,
-                        'signal_quality': signal_quality(rssi)
+                        'signal_quality': signal_quality(int(rssi))
                     }
                 }
 
@@ -148,7 +148,8 @@ class Morudall(mqtt.Client):
                 traceback.print_exc()
 
     def _save_ap_data(self, data):
-        self._notify.send('near', data['device'], 'bus_near')
+        sse_data = '%s,%s' % (data['device'], data['ap']['bssid'])
+        self._notify.send('near', sse_data, 'bus_near')
 
         if self._debug:
             print(data)
