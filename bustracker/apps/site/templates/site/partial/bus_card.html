@@ -1,6 +1,7 @@
 {% load extra %}
 
-<div class="row bus-panel" data-id="{{ bus.id }}">
+{% with arrival=bus|estimated_arrival_to:station %}
+<div class="row bus-panel {% if arrival <= 2 %}pulse{% endif %}" data-id="{{ bus.id }}" data-device="{{ bus.device_id }}">
     <div class="panel {{ color }}">
         <div class="panel-heading upper"><strong>{{ bus.route.name }}</strong></div>
         <div class="panel-body">
@@ -8,9 +9,10 @@
                 <i class="fa fa-bus fa-3x" style="line-height: 1.4;"> {{ bus.route.code }}</i>
             </div>
             <div class="pull-right">
-                <span class="fa-3x">{{ bus|estimated_arrival_to:station|floatformat:"0" }}</span>
+                <span class="fa-3x">{{ arrival|floatformat:"0" }}</span>
                 <span class="fa-2x">Minutos</span>
             </div>
         </div>
     </div>
 </div>
+{% endwith %}

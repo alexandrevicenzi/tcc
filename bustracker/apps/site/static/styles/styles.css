@@ -95,3 +95,25 @@ html, body {
 .progress {
     margin: 0;
 }
+
+/* https://github.com/daneden/animate.css/blob/master/source/attention_seekers/pulse.css */
+
+@keyframes pulse {
+  from {
+    transform: scale3d(1, 1, 1);
+  }
+
+  50% {
+    transform: scale3d(1.05, 1.05, 1.05);
+  }
+
+  to {
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.pulse {
+  animation-name: pulse;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}

@@ -60,6 +60,24 @@
 
 {% block additional_js %}
   <script type="text/javascript">
+    var canReaload = true;
+
+    /*
+      Avoid realoding page many times per second.
+      This will force page to be reload in an
+      interval of at least 30s.
+    */
+    function reload_page() {
+      if (canReaload) {
+        console.log('Position updated!');
+        canReaload = false;
+        location.reload();
+        setTimeout(function () {
+          canReaload = true;
+        }, 30 * 1000);
+      }
+    }
+
     function chooseStation(position) {
       console.log('Auto discovery...');
 
@@ -91,6 +109,21 @@
           location.search = '';
         }
       });
+
+      if (window.EventSource) {
+        var eventSource = new EventSource('{% url "bus_position_stream" %}');
+
+        eventSource.addEventListener('position', function(e) {
+          var info = e.data.split(',');
+          var device_id = info[0];
+
+          if ($('[data-device="'+ device_id +'"]')) {
+            reload_page();
+          }
+        });
+      } else {
+        console.warn('SSE not supported!');
+      }
     });
   </script>
 {% endblock %}
