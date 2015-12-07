@@ -53,16 +53,17 @@ def is_online(device_id):
 def is_moving(device_id):
     '''
         Returns True if the Bus has moved
-        more then 250m in the last 5 minutes.
+        more then 1000m in the last 5 minutes.
     '''
     lat, lon = get_last_lat_lon(device_id)
     positions = list(get_last_positions(device_id))
 
-    if lat and lon and positions:
-        distances = get_distances([(lat, lon)], positions)
-        distances = list(distances.values())
-        distance = reduce(lambda acc, item: acc + item.meters, distances) / len(positions)
-        return distance > 250
+    if lat and lon and len(positions) > 1:
+        distances = get_distances([(lat, lon)], [positions[0], positions[-1]])
+        if distances:
+            distances = list(distances.values())
+            distance = abs(distances[0].meters - distances[-1].meters)
+            return distance >= 1000
 
     return False
 

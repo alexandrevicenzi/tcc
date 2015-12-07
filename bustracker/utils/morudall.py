@@ -86,7 +86,7 @@ def get_last_positions(device_id):
         'latitude': {'$exists': True},
         'longitude': {'$exists': True},
         'time': {'$gt': time}
-    })
+    }).sort('time', DESCENDING)
 
     if cursor.count() > 0:
         for item in cursor:
