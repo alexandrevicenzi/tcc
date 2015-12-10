@@ -42,7 +42,7 @@ end
 
 function get_time_iso_8601()
     second, minute, hour, day_of_week, day_of_month, month, year = get_time()
-    return string.format("20%s-%s-%s-T%s:%s:%s-03:00", year, month, day_of_month, hour, minute, second)
+    return string.format("20%s-%s-%s-T%s:%s:%s", year, month, day_of_month, hour, minute, second)
 end
 
 function set_time(hour, minute, second, day_of_week, date, month, year)
