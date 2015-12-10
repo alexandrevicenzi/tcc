@@ -7,6 +7,15 @@ local queue = {}
 local DEVICE_ID = wifi.sta.getmac()
 local on_wifi = wifi.sta.eventMonReg
 local shift = table.remove
+local MQTT_ADDR, MQTT_PORT, MQTT_USER, MQTT_PWD
+
+if file.open("mqtt.conf", "r") then
+    local line = file.readline()
+    if line ~= nil then
+        MQTT_ADDR, MQTT_PORT, MQTT_USER, MQTT_PWD = string.match(line, "([^,]+),([^,]+),([^,]+),([^,]+)\n")
+    end
+    file.close()
+end
 
 function gps_on()
     led.on(led.GPS)
@@ -85,7 +94,7 @@ end
 
 local function load_ap()
     if file.open("wpa.conf", "r") then
-        local line, i, j, l, ssid, pwd, bssid
+        local line, ssid, pwd, bssid
         line = file.readline()
 
         while line ~= nil do
@@ -99,7 +108,7 @@ local function load_ap()
 end
 
 function start_all()
-    mq:connect("tcc.alexandrevicenzi.com", 1883, 0, function ()
+    mq:connect(MQTT_ADDR, MQTT_PORT, 0, function ()
         print("MQTT connected.")
         led.on(led.MQTT)
 
@@ -130,7 +139,7 @@ gpio.mode(4, gpio.OUTPUT)
 led.setup()
 time.setup()
 
-mq = mqtt.Client("soressa", 60, "guest", "guest")
+mq = mqtt.Client("soressa", 60, MQTT_USER, MQTT_PWD)
 mq:lwt("/lwt", "offline", 0, 0)
 mq:on("offline", function ()
     stop_events()
