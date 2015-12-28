@@ -60,7 +60,6 @@ venv
 *.sqlite3
 *.bin
 wpa.conf
-*.pdf
 .DS_Store
 *.fzz
 .vagrant
