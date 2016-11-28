@@ -39,7 +39,7 @@ To get Soressa working, connect to Wifi and MQTT, you need to add configuration 
 
 You need to save `wpa.conf` to ESP file system.
 This is a plain text file with SSID, password and BSSID.
-The file can have multiple lines.
+The file can have multiple lines and the last line must end with `\n`.
 
 For example:
 
@@ -50,7 +50,14 @@ OtherWIFI,OtherPWD,00:0a:95:9d:68:16
 
 ### For MQTT
 
-TODO
+You need to save `mqtt.conf` to ESP file system.
+The file must have one line and the line must end with `\n`.
+
+For example:
+
+```
+mqtt.myserver.com,1883,user,password
+```
 
 ## Location
 
